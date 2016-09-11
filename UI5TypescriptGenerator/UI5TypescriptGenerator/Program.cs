@@ -215,17 +215,31 @@ namespace UI5TypescriptGenerator
 
             CreateClassContent(classcontent);
 
-            CreateInterfaceDescriptions(classcontent, tablevel);
+            //CreateInterfaceDescriptions(classcontent, tablevel);
             namespacecontent.AppendLine("", tablevel);
             namespacecontent.AppendLine("class " + Name + (string.IsNullOrWhiteSpace(Baseclass) ? "" : " extends " + Baseclass) + " {", tablevel);
             namespacecontent.AppendLine(classcontent.ToString(), tablevel+1);
             namespacecontent.AppendLine("}", tablevel);
+            CreateInterfaceDescriptions(namespacecontent, tablevel);
 
         }
 
         private void CreateInterfaceDescriptions(StringBuilder classcontent, int tablevel)
         {
-            // TODO Impelemnt
+            foreach(InterfaceDefinition idesc in UsedInterfaces)
+            {
+                classcontent.AppendLine();
+                StringBuilder interfacecontent = new StringBuilder();
+                interfacecontent.AppendLine("interface " + idesc.Name + "{");
+                foreach (Property prop in idesc.Properties)
+                {
+                    if (prop.Description != null)
+                        interfacecontent.AppendComment(prop.Description, 1);
+                    interfacecontent.AppendLine($"{prop.Name}?: {prop.Type}", 1);
+                }
+                interfacecontent.AppendLine("}");
+                classcontent.AppendLine(interfacecontent.ToString(), tablevel);
+            }
         }
 
         private void CreateClassContent(StringBuilder classcontent)
@@ -269,16 +283,16 @@ namespace UI5TypescriptGenerator
         /// </example>
         /// <param name="sb"></param>
         /// <param name="commenttext"></param>
-        public static void AppendComment(this StringBuilder sb, string commenttext)
+        public static void AppendComment(this StringBuilder sb, string commenttext, int tablevel = 0)
         {
-            sb.AppendLine("/**");
+            sb.AppendLine("/**", tablevel);
             using (StringReader sr = new StringReader(commenttext))
             {
                 string line;
                 while ((line = sr.ReadLine()) != null)
-                    sb.AppendLine(" * " + line);
+                    sb.AppendLine(" * " + line, tablevel);
             }
-            sb.AppendLine(" */");
+            sb.AppendLine(" */", tablevel);
         }
 
         /// <summary>
@@ -300,8 +314,9 @@ namespace UI5TypescriptGenerator
 
     public class InterfaceDefinition
     {
-        public string Name { get; internal set; }
+        public string Name { get; set; }
         public List<Property> Properties { get; set; } = new List<Property>();
+        public string BaseInterface { get; set; }
     }
 
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
@@ -382,7 +397,7 @@ namespace UI5TypescriptGenerator
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendComment(CreateTypescriptMethodDescription(parameters));
-            sb.AppendLine($"{Modifier} {Name}(" + parameters.Aggregate("", (a, b) => a + ", " + b.Name + ":" + b.Type).TrimStart(", ".ToCharArray()) + ")" + (string.IsNullOrWhiteSpace(ReturnType) ? "" : " : " + ReturnType));
+            sb.Append($"{Modifier} {Name}(" + parameters.Aggregate("", (a, b) => a + ", " + b.Name + ":" + b.Type).TrimStart(", ".ToCharArray()) + ")" + (string.IsNullOrWhiteSpace(ReturnType) ? "" : " : " + ReturnType));
             return sb.ToString();
         }
 
