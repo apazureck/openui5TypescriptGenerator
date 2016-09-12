@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="UI5TypeScriptGeneratorJsonGUI.Ui5Parameter">
+    <Position X="0.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAZA=</HashCode>
+      <FileName>Classes\Ui5Parameter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="UI5TypeScriptGeneratorJsonGUI.Ui5Value">
+    <Position X="4.25" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAIAAAAAAAAAABAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Classes\Ui5ReturnValue.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="UI5TypeScriptGeneratorJsonGUI.Ui5Constructor">
+    <Position X="0.5" Y="3" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Classes\Ui5Constructor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="UI5TypeScriptGeneratorJsonGUI.Ui5Base">
+    <Position X="7.75" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAIAAAAAAAAAAEAAAAAAAAQAAAIAA=</HashCode>
+      <FileName>Classes\Ui5Base.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="UI5TypeScriptGeneratorJsonGUI.Ui5Property">
+    <Position X="0.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAQAAAQAAAAAA=</HashCode>
+      <FileName>Classes\Ui5Property.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="UI5TypeScriptGeneratorJsonGUI.Ui5Member">
+    <Position X="4.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAABAAAA=</HashCode>
+      <FileName>Classes\Ui5Member.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

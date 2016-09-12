@@ -1,0 +1,38 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="UI5TypeScriptGeneratorJsonGUI.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="TypeReplacements" Type="System.String" Scope="User">
+      <Value Profile="(Default)">object : any
+function : any
+int : number
+Map : any
+undefined : 
+true : boolean
+null : </Value>
+    </Setting>
+    <Setting Name="RestEndpoints" Type="System.String" Scope="User">
+      <Value Profile="(Default)">sap/m/designtime/api.json
+sap/tnt/designtime/api.json
+sap/ui/commons/designtime/api.json
+sap/ui/core/designtime/api.json
+sap/ui/demokit/designtime/api.json
+sap/ui/dt/designtime/api.json
+sap/ui/layout/designtime/api.json
+sap/ui/suite/designtime/api.json
+sap/ui/table/designtime/api.json
+sap/ui/unified/designtime/api.json
+sap/ui/ux3/designtime/api.json
+sap/uxap/designtime/api.json</Value>
+    </Setting>
+    <Setting Name="OutputFolder" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ServiceAddress" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://openui5.hana.ondemand.com/test-resources</Value>
+    </Setting>
+    <Setting Name="Version" Type="System.String" Scope="User">
+      <Value Profile="(Default)">1.40</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

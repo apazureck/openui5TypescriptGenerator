@@ -1,0 +1,35 @@
+﻿<Window x:Class="UI5TypeScriptGeneratorJsonGUI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:UI5TypeScriptGeneratorJsonGUI"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="472.396" Width="937.13">
+    <TabControl>
+        <TabItem Header="Settings">
+            <DockPanel ScrollViewer.VerticalScrollBarVisibility="Auto" LastChildFill="True">
+                <Label DockPanel.Dock="Top">Address</Label>
+                <TextBox DockPanel.Dock="Top" Text="{Binding RestAddress}"/>
+                <Label DockPanel.Dock="Top">Outputfolder</Label>
+                <TextBox DockPanel.Dock="Top" Text="{Binding OutputFolder}"/>
+                <Label DockPanel.Dock="Top">Create for Version</Label>
+                <TextBox Text="{Binding Version}"/>
+                <Label DockPanel.Dock="Top">Rest Endpoints for input files (One endpoint per line)</Label>
+                <TextBox DockPanel.Dock="Top" Text="{Binding RestEndpoints}" Height="100" TextWrapping="Wrap" AcceptsReturn="True" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                <Label DockPanel.Dock="Top">Type Replacements</Label>
+                <TextBox Text="{Binding TypeReplacements}" ScrollViewer.VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" AcceptsReturn="True"/>
+            </DockPanel>
+        </TabItem>
+        <TabItem Header="Output">
+            <DockPanel LastChildFill="True">
+                <Button Click="Button_Click" DockPanel.Dock="Top">Get Type Definitions</Button>
+                <Button Click="Button_Click_1" DockPanel.Dock="Top">Go to ouptut folder</Button>
+                <TextBox ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" Text="{Binding Output}" DockPanel.Dock="Right" Margin="5" Width="500"/>
+                <ListView ItemsSource="{Binding LogEntries}" Margin="5" x:Name="log">
+                </ListView>
+            </DockPanel>
+        </TabItem>
+    </TabControl>
+    
+</Window>
