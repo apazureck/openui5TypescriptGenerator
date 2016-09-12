@@ -3,13 +3,67 @@
   <Profiles />
   <Settings>
     <Setting Name="TypeReplacements" Type="System.String" Scope="User">
-      <Value Profile="(Default)">object : any
+      <Value Profile="(Default)">* : any
+any[] : any[]
+array : any[]
+Array : any[]
+array.&lt;array.&lt;string&gt;&gt; : string[][]
+arraybuffer : any
+bAlwaysShow : boolean
+blob : any
+Boolean : boolean
+CalendarAppointment : any
+Control : sap.ui.Core.Control
+createDefaultContent : any
+date : any
+Date : any
+DomNode : any
+DOMNode : any
+domRef : any
+DomRef : any
+DOMRef : any
+DomRef[] : any[]
+element : any
+Element : any
+Element[] : any[]
+EntityType : any
+Error : any
+event : any
+float : number
 function : any
+Generator : any
+HTMLElement : any
 int : number
+int[] : number[]
+integer : number
+jQuery : any
+map : any
 Map : any
-undefined : 
+MenuButton : any
+null :
+Number : number
+Number[] : number[]
+objec : any
+object : any
+Object : any
+object[] : any[]
+ObjectNumber : number
+oWindow : any
+Promise : any
+regexp : string
+sap.ui.core.Controller : sap.ui.core.mvc.Controller
+ScrollEnablement : sap.ui.core.delegate.ScrollEnablement
+sting[] : string[]
+String : string
+string[] : string[]
+String[] : string[]
+TablePersoController : any
+TablePersoDialog : any
+Touch : any
+TouchList : any
 true : boolean
-null : </Value>
+undefined : any
+Window : any</Value>
     </Setting>
     <Setting Name="RestEndpoints" Type="System.String" Scope="User">
       <Value Profile="(Default)">sap/m/designtime/api.json

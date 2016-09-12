@@ -25,8 +25,67 @@ namespace UI5TypeScriptGeneratorJsonGUI.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("object : any\r\nfunction : any\r\nint : number\r\nMap : any\r\nundefined : \r\ntrue : boole" +
-            "an\r\nnull : ")]
+        [global::System.Configuration.DefaultSettingValueAttribute(@"* : any
+any[] : any[]
+array : any[]
+Array : any[]
+array.<array.<string>> : string[][]
+arraybuffer : any
+bAlwaysShow : boolean
+blob : any
+Boolean : boolean
+CalendarAppointment : any
+Control : sap.ui.Core.Control
+createDefaultContent : any
+date : any
+Date : any
+DomNode : any
+DOMNode : any
+domRef : any
+DomRef : any
+DOMRef : any
+DomRef[] : any[]
+element : any
+Element : any
+Element[] : any[]
+EntityType : any
+Error : any
+event : any
+float : number
+function : any
+Generator : any
+HTMLElement : any
+int : number
+int[] : number[]
+integer : number
+jQuery : any
+map : any
+Map : any
+MenuButton : any
+null :
+Number : number
+Number[] : number[]
+objec : any
+object : any
+Object : any
+object[] : any[]
+ObjectNumber : number
+oWindow : any
+Promise : any
+regexp : string
+sap.ui.core.Controller : sap.ui.core.mvc.Controller
+ScrollEnablement : sap.ui.core.delegate.ScrollEnablement
+sting[] : string[]
+String : string
+string[] : string[]
+String[] : string[]
+TablePersoController : any
+TablePersoDialog : any
+Touch : any
+TouchList : any
+true : boolean
+undefined : any
+Window : any")]
         public string TypeReplacements {
             get {
                 return ((string)(this["TypeReplacements"]));

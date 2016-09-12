@@ -14,7 +14,7 @@
                 <Label DockPanel.Dock="Top">Outputfolder</Label>
                 <TextBox DockPanel.Dock="Top" Text="{Binding OutputFolder}"/>
                 <Label DockPanel.Dock="Top">Create for Version</Label>
-                <TextBox Text="{Binding Version}"/>
+                <TextBox Text="{Binding Version}" DockPanel.Dock="Top"/>
                 <Label DockPanel.Dock="Top">Rest Endpoints for input files (One endpoint per line)</Label>
                 <TextBox DockPanel.Dock="Top" Text="{Binding RestEndpoints}" Height="100" TextWrapping="Wrap" AcceptsReturn="True" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
                 <Label DockPanel.Dock="Top">Type Replacements</Label>
