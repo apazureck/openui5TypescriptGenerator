@@ -88,5 +88,8 @@ sap/uxap/designtime/api.json</Value>
     <Setting Name="Version" Type="System.String" Scope="User">
       <Value Profile="(Default)">1.40</Value>
     </Setting>
+    <Setting Name="TypeDefinitions" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

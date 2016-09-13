@@ -29,6 +29,22 @@ namespace UI5TypeScriptGeneratorJsonGUI
             }
         }
 
+        protected void AppendProperties(StringBuilder sb, bool @explicit = false)
+        {
+            foreach (Ui5Property property in properties)
+                if (property.IncludedInVersion())
+                    sb.AppendLine(property.SerializeTypescript(@explicit), 1);
+        }
+
+        protected void AppendMethods(StringBuilder sb, bool @explicit = false)
+        {
+            foreach (Ui5Method method in methods)
+                if (method.IncludedInVersion())
+                    sb.AppendLine(method.SerializeTypescriptMethodStubs(@explicit).Aggregate((a, b) => a + ";" + Environment.NewLine + b) + ";", 1);
+        }
+
+        public string fullname { get { return (string.IsNullOrWhiteSpace(@namespace) ? "" : @namespace + ".") + name; } }
+
         public string extends { get; set; }
 
         public string @namespace

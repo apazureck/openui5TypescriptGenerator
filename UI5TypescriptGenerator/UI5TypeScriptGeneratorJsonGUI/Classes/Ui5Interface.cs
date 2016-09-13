@@ -15,13 +15,10 @@ namespace UI5TypeScriptGeneratorJsonGUI
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($"interface {name} {(extends != null ? "extends " + extends : "")}{"{"}");
 
-            foreach (Ui5Property property in properties)
-                if (property.IncludedInVersion())
-                    sb.AppendLine(property.SerializeTypescript());
+            AppendProperties(sb);
 
-            foreach (Ui5Method method in methods)
-                if(method.IncludedInVersion())
-                    sb.AppendLine(method.SerializeTypescriptMethodStubs().Aggregate((a, b) => a + ";" + Environment.NewLine + b) + ";", 1);
+            AppendMethods(sb);
+
             sb.AppendLine("}");
             return sb.ToString();
         }

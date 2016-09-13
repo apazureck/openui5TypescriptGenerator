@@ -11,6 +11,8 @@ namespace UI5TypeScriptGeneratorJsonGUI
     {
         public static Dictionary<string, string> TranslationDictionary { get; set; }
         public static Dictionary<string, int> UntouchedTypes { get; set; } = new Dictionary<string, int>();
+
+        public static Dictionary<string, string> Typedefinitions { get; set; }
         public static string ConvertToValidTypeIfKnown(string inval)
         {
             string[] values = inval.Split('|');
@@ -39,6 +41,14 @@ namespace UI5TypeScriptGeneratorJsonGUI
             {
                 return null;
             }
+        }
+
+        internal static string InsertTypeForSimpleTypedef(string type)
+        {
+            if (Typedefinitions.ContainsKey(type))
+                return Typedefinitions[type];
+            else
+                return "any";
         }
 
         public static Dictionary<string, string> Defaultvalues { set; get; } = new Dictionary<string, string>

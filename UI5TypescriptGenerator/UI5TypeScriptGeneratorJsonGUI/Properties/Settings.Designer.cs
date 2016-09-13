@@ -153,5 +153,17 @@ sap/uxap/designtime/api.json")]
                 this["Version"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string TypeDefinitions {
+            get {
+                return ((string)(this["TypeDefinitions"]));
+            }
+            set {
+                this["TypeDefinitions"] = value;
+            }
+        }
     }
 }

@@ -25,12 +25,12 @@ namespace UI5TypeScriptGeneratorJsonGUI
             set { _type = globalValues.ConvertToValidTypeIfKnown(value); }
         }
 
-        public string SerializeTypescript()
+        public string SerializeTypescript(bool @explicit = false)
         {
             StringBuilder sb = new StringBuilder();
             if (description != null)
                 sb.AppendComment(description);
-            sb.AppendLine($"{visibility.GetDescription()} {name}: {propertytype}");
+            sb.AppendLine($"{visibility.GetDescription()}{(@explicit ? " var" : "")} {name}: {propertytype}{(defaultValue != null ? " = " + defaultValue : "")};");
             return sb.ToString();
         }
 

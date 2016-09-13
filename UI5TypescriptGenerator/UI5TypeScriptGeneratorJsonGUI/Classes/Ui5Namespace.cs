@@ -16,20 +16,29 @@ namespace UI5TypeScriptGeneratorJsonGUI
             if (description != null)
                 sb.AppendComment(description);
 
-            if (methods.Count == 0)
+            // Check if namespace has a parent and then create namespace declaration.
+            // This is used for file splitting, e.g. splitting in sap.m.ts, sap.ui.d.ts, etc.
+            if (parentNamespace == null)
+                sb.AppendLine("declare namespace " + fullname + " {");
+            else
+                sb.AppendLine("namespace " + name + " {");
+
+            Content.ForEach(x =>
             {
-                sb.AppendLine("type " + name + " = any");
-                return sb.ToString();
-            }
+                sb.AppendLine();
+                sb.AppendLine(x.SerializeTypescript(), 1);
+            });
 
-            sb.AppendLine("namespace " + name + " {");
+            AppendProperties(sb, true);
 
-            foreach (Ui5Method method in methods)
-                if(method.IncludedInVersion())
-                    sb.AppendLine(method.SerializeTypescriptMethodStubs(true).Aggregate((a, b) => a + ";" + Environment.NewLine + b) + ";", 1);
+            AppendMethods(sb, true);
 
             sb.AppendLine("}");
             return sb.ToString();
         }
+
+        public List<Ui5Complex> Content = new List<Ui5Complex>();
+        
+        public Ui5Namespace parentNamespace { get; set; }
     }
 }

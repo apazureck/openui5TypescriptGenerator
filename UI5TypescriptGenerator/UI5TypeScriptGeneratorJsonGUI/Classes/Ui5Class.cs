@@ -18,21 +18,15 @@ namespace UI5TypeScriptGeneratorJsonGUI
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($"class {name} {(extends != null ? "extends " + extends : "")}{"{"}");
-            if(constructor.visibility == Visibility.Public && constructor.IncludedInVersion())
-                sb.AppendLine(constructor.SerializeTypescriptMethodStubs().Aggregate((a, b) => a + ";" + Environment.NewLine + b)+ ";", 1);
-            foreach (Ui5Method method in methods)
-                if(method.IncludedInVersion())
-                    sb.AppendLine(method.SerializeTypescriptMethodStubs().Aggregate((a, b) => a + ";" + Environment.NewLine + b) + ";", 1);
-            foreach (Ui5Property property in properties)
-                if (property.IncludedInVersion())
-                    sb.AppendLine(property.SerializeTypescript());
+            if (constructor.visibility == Visibility.Public && constructor.IncludedInVersion())
+                sb.AppendLine(constructor.SerializeTypescriptMethodStubs().Aggregate((a, b) => a + ";" + Environment.NewLine + b) + ";", 1);
+
+            AppendProperties(sb);
+
+            AppendMethods(sb);
+
             sb.AppendLine("}");
             return sb.ToString();
-        }
-
-        private void CreateMethod(StringBuilder sb)
-        {
-            sb.AppendComment(description, 1);
         }
 
         override protected string DebuggerDisplay => "Ui5Class: " + name + " (" + @namespace + "." + name + ")";

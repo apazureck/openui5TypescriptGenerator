@@ -17,8 +17,22 @@
                 <TextBox Text="{Binding Version}" DockPanel.Dock="Top"/>
                 <Label DockPanel.Dock="Top">Rest Endpoints for input files (One endpoint per line)</Label>
                 <TextBox DockPanel.Dock="Top" Text="{Binding RestEndpoints}" Height="100" TextWrapping="Wrap" AcceptsReturn="True" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
-                <Label DockPanel.Dock="Top">Type Replacements</Label>
-                <TextBox Text="{Binding TypeReplacements}" ScrollViewer.VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" AcceptsReturn="True"/>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="30"/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="200"/>
+                        <ColumnDefinition Width="5" />
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Label DockPanel.Dock="Top">Type Replacements</Label>
+                    <TextBox Grid.Row="1" Text="{Binding TypeReplacements}" ScrollViewer.VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" AcceptsReturn="True"/>
+                    <GridSplitter Width="5" Grid.Column="1" HorizontalAlignment="Stretch" Grid.RowSpan="2"/>
+                    <Label Grid.Column="2" DockPanel.Dock="Top" Content="Type Definitions"/>
+                    <TextBox Grid.Column="2" Grid.Row="1" Text="{Binding TypeDefinitions}" ScrollViewer.VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" AcceptsReturn="True"/>
+                </Grid>
             </DockPanel>
         </TabItem>
         <TabItem Header="Output">
