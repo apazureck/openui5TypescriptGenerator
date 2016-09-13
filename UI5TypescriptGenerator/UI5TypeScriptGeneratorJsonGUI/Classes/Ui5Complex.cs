@@ -47,6 +47,13 @@ namespace UI5TypeScriptGeneratorJsonGUI
 
         public string extends { get; set; }
 
+        public void SetAbsolutePathsOnMembers()
+        {
+            IEnumerable<Ui5Member> members = methods.Cast<Ui5Member>().Concat(properties);
+            foreach (Ui5Member member in members)
+                member.absolutepath = @namespace;
+        }
+
         public string @namespace
         {
             get; private set;

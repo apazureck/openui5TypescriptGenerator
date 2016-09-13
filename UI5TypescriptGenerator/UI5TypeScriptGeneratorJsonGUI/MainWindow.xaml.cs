@@ -172,6 +172,9 @@ namespace UI5TypeScriptGeneratorJsonGUI
                 .OrderBy(x=> x.@namespace+"."+x.name).ToList();
                 alldistinctcomplex = alldistinctcomplex.Where(x => x.IncludedInVersion()).ToList();
 
+                foreach (Ui5Complex type in alldistinctcomplex.Concat(allsymbols[typeof(Ui5Namespace).Name].Cast<Ui5Complex>().Distinct(new ComplexEqualityComparer())))
+                    type.SetAbsolutePathsOnMembers();
+
                 List<Ui5Complex> results = AddToNamespaces(allsymbols[typeof(Ui5Namespace).Name].Cast<Ui5Namespace>(), alldistinctcomplex);
 
                 Log("Found " + alldistinctcomplex.Count() + " classes.");

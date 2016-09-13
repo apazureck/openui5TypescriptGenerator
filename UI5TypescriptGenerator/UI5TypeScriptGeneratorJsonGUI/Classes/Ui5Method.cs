@@ -10,7 +10,6 @@ namespace UI5TypeScriptGeneratorJsonGUI
     {
         public Ui5Value returnValue { get; set; }
         public List<Ui5Parameter> parameters { get; set; } = new List<Ui5Parameter>();
-
         public string[] SerializeTypescriptMethodStubs(bool @explicit = false)
         {               
             //return
@@ -60,7 +59,7 @@ namespace UI5TypeScriptGeneratorJsonGUI
 
         public string CreateDefinition(IEnumerable<Ui5Parameter> pars, bool @explicit)
         {
-            return $"{(@explicit ? "function" : visibility.GetDescription())} {name}(" + pars.Aggregate("", (a, b) => a + ", " + b.name + (b.optional ? "?" : "") + (string.IsNullOrWhiteSpace(b.type) ? "" : ":" + b.type)).TrimStart(", ".ToCharArray()) + ")" + (returnValue != null && returnValue.type != null ? ": " + returnValue.type : "");
+            return $"{(@explicit ? "function" : visibility.GetDescription())} {name}(" + pars.Aggregate("", (a, b) => a + ", " + b.name + (b.optional ? "?" : "") + (string.IsNullOrWhiteSpace(b.type) ? "" : ":" + b.GetRelativeTypeDef(absolutepath))).TrimStart(", ".ToCharArray()) + ")" + (returnValue != null && returnValue.type != null ? ": " + returnValue.GetRelativeTypeDef(absolutepath) : "");
         }
 
         public string CreateDescription(IEnumerable<Ui5Parameter> pars)

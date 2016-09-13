@@ -30,7 +30,7 @@ namespace UI5TypeScriptGeneratorJsonGUI
             StringBuilder sb = new StringBuilder();
             if (description != null)
                 sb.AppendComment(description);
-            sb.AppendLine($"{visibility.GetDescription()}{(@explicit ? " var" : "")} {name}: {propertytype}{(defaultValue != null ? " = " + defaultValue : "")};");
+            sb.AppendLine($"{visibility.GetDescription()}{(@explicit ? " var" : "")} {name}: {Ui5Value.GetRelativeTypeDef(propertytype, absolutepath)}{(defaultValue != null ? " = " + defaultValue : "")};");
             return sb.ToString();
         }
 

@@ -11,5 +11,18 @@
         }
 
         public string description { get; set; }
+
+        public string GetRelativeTypeDef(string absolutepath)
+        {
+            return GetRelativeTypeDef(absolutepath, type);
+        }
+
+        public static string GetRelativeTypeDef(string absolutepath, string type)
+        {
+            if (!string.IsNullOrWhiteSpace(absolutepath) && type.StartsWith(absolutepath))
+                return type.Replace(absolutepath + ".", "");
+            else
+                return type;
+        }
     }
 }
