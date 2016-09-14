@@ -8,13 +8,13 @@ namespace UI5TypeScriptGeneratorJsonGUI
         [EnumMember(Value = "public")]
         [Description("")]
         Public,
-        [Description("protected")]
+        [Description("protected ")]
         [EnumMember(Value = "protected")]
         Protected,
-        [Description("private")]
+        [Description("private ")]
         [EnumMember(Value = "private")]
         Private,
-        [Description("private")]
+        [Description("private ")]
         [EnumMember(Value = "restricted")]
         Resticted
     }

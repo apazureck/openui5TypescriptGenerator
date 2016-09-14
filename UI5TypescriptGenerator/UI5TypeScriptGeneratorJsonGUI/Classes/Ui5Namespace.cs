@@ -8,11 +8,19 @@ using System.Threading.Tasks;
 namespace UI5TypeScriptGeneratorJsonGUI
 {
 
-    class Ui5Namespace : Ui5Complex
+    public class Ui5Namespace : Ui5Complex
     {
         public override string SerializeTypescript()
         {
             StringBuilder sb = new StringBuilder();
+
+            if (parentNamespace == null)
+                foreach (var entry in Imports)
+                    sb.AppendLine($"import {entry.Value} = {entry.Key};");
+
+            if(Imports.Count>0)
+                sb.AppendLine();
+
             if (description != null)
                 sb.AppendComment(description);
 
@@ -29,16 +37,23 @@ namespace UI5TypeScriptGeneratorJsonGUI
                 sb.AppendLine(x.SerializeTypescript(), 1);
             });
 
-            AppendProperties(sb, true);
+            AppendProperties(sb, true, false);
 
-            AppendMethods(sb, true);
+            AppendMethods(sb, true, false);
+
+            additionaltypedefs.ForEach(x => sb.AppendLine(x, 1));
 
             sb.AppendLine("}");
             return sb.ToString();
         }
 
-        public List<Ui5Complex> Content = new List<Ui5Complex>();
-        
-        public Ui5Namespace parentNamespace { get; set; }
+        public Dictionary<string, string> Imports { get; set; } = new Dictionary<string, string>();
+
+        internal void AppendAdditionalTypedef(string typedef)
+        {
+            additionaltypedefs.Add(typedef);
+        }
+
+        private List<string> additionaltypedefs = new List<string>();
     }
 }

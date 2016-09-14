@@ -37,6 +37,10 @@ int : number
 int[] : number[]
 integer : number
 jQuery : any
+jQuery.promise : any
+jQuery.sap.log : any
+jQuery.sap.util.ResourceBundle : any
+ManagedObjectMetadata : any
 map : any
 Map : any
 MenuButton : any
@@ -49,9 +53,16 @@ Object : any
 object[] : any[]
 ObjectNumber : number
 oWindow : any
+P13nConditionOperation[] : any[]
 Promise : any
+qunit : any
 regexp : string
+sap.m.DynamicSideContent : sap.ui.layout.DynamicSideContent
+sap.ui.base.ManageObject : sap.ui.base.ManagedObject
+sap.ui.Core.Control : sap.ui.core.Control
 sap.ui.core.Controller : sap.ui.core.mvc.Controller
+sap.ui.core.InvisibleControl : any
+sap.util.Properties : any
 ScrollEnablement : sap.ui.core.delegate.ScrollEnablement
 sting[] : string[]
 String : string
@@ -59,9 +70,11 @@ string[] : string[]
 String[] : string[]
 TablePersoController : any
 TablePersoDialog : any
+TabStripItem : any
 Touch : any
 TouchList : any
 true : boolean
+UI5EntityCueCardStyle : any
 undefined : any
 Window : any</Value>
     </Setting>
@@ -89,7 +102,23 @@ sap/uxap/designtime/api.json</Value>
       <Value Profile="(Default)">1.40</Value>
     </Setting>
     <Setting Name="TypeDefinitions" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
+      <Value Profile="(Default)">sap.ui.core.BusyIndicator : Ui5Enum
+sap.ui.core.Collision : string
+sap.ui.core.CSSSize : string
+sap.ui.core.Dock : string
+sap.ui.core.ID : string
+sap.ui.core.Popup.Dock : string
+sap.ui.core.URI : string
+sap.ui.core.ws.ReadyState : Ui5Enum
+sap.ui.layout.BlockBackgroundType : Ui5Enum
+sap.ui.layout.form.GridElementCells : string|number
+sap.ui.layout.GridIndent : string
+sap.ui.layout.GridSpan : string
+sap.ui.model.analytics.odata4analytics.SortOrder : Ui5Enum
+sap.ui.model.BindingMode : Ui5Enum
+sap.ui.model.FilterType : Ui5Enum
+sap.ui.model.odata.CountMode : Ui5Enum
+sap.ui.suite.TaskCircleColor : string</Value>
     </Setting>
   </Settings>
 </SettingsFile>

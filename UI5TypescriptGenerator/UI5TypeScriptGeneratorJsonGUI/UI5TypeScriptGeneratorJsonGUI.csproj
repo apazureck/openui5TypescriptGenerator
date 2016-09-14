@@ -91,6 +91,7 @@
     <Compile Include="globalValues.cs" />
     <Compile Include="ILog.cs" />
     <Compile Include="ITyping.cs" />
+    <Compile Include="LinqExtensions.cs" />
     <Compile Include="StringBuilderExtensions.cs" />
     <Compile Include="SymbolEqualityComparer.cs" />
     <Compile Include="TypeScriptSerializer.cs" />
@@ -108,7 +109,7 @@
     <Compile Include="Classes\Ui5Namespace.cs" />
     <Compile Include="Classes\Ui5Parameter.cs" />
     <Compile Include="Classes\Ui5Property.cs" />
-    <Compile Include="Classes\Ui5ReturnValue.cs" />
+    <Compile Include="Classes\Ui5Value.cs" />
     <Compile Include="Classes\Ui5Symbol.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />

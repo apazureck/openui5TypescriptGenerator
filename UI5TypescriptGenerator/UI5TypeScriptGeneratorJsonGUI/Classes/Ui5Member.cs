@@ -8,6 +8,6 @@ namespace UI5TypeScriptGeneratorJsonGUI
         public bool @static { get; set; }
         [JsonConverter(typeof(StringEnumConverter))]
         public Visibility visibility { get; set; }
-        public string absolutepath {get;set;}
+        public Ui5Complex owner { get; set; }
     }
 }

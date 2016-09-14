@@ -25,12 +25,12 @@ namespace UI5TypeScriptGeneratorJsonGUI
             set { _type = globalValues.ConvertToValidTypeIfKnown(value); }
         }
 
-        public string SerializeTypescript(bool @explicit = false)
+        public string SerializeTypescript(bool @explicit = false, bool createstatic = false)
         {
             StringBuilder sb = new StringBuilder();
             if (description != null)
                 sb.AppendComment(description);
-            sb.AppendLine($"{visibility.GetDescription()}{(@explicit ? " var" : "")} {name}: {Ui5Value.GetRelativeTypeDef(propertytype, absolutepath)}{(defaultValue != null ? " = " + defaultValue : "")};");
+            sb.AppendLine($"{(!@explicit ? visibility.GetDescription() : "")}{(@explicit ? (@static && createstatic ? "static" :"var") : "")} {name}: {Ui5Value.GetRelativeTypeDef(owner, propertytype)}{(defaultValue != null ? " = " + defaultValue : "")};");
             return sb.ToString();
         }
 

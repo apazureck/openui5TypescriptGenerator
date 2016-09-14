@@ -18,7 +18,7 @@ namespace UI5TypeScriptGeneratorJsonGUI
             string[] values = inval.Split('|');
             List<string> retvalues = new List<string>(values.Length);
             foreach (string value in values)
-                if (IsDefaultType(value))
+                if (IsBaseType(value))
                     retvalues.Add(value);
                 else if (TranslationDictionary.ContainsKey(value))
                     retvalues.Add(TranslationDictionary[value]);
@@ -35,7 +35,7 @@ namespace UI5TypeScriptGeneratorJsonGUI
             // Split to remove empty entries (if type should not be used in typedef
             try
             {
-                return retvalues.Aggregate((a, b) => a + "|" + b).Split("|".ToCharArray(), StringSplitOptions.RemoveEmptyEntries).Aggregate((a, b) => a + "|" + b);
+                return retvalues.Distinct().Aggregate((a, b) => a + "|" + b).Split("|".ToCharArray(), StringSplitOptions.RemoveEmptyEntries).Aggregate((a, b) => a + "|" + b);
             }
             catch (Exception)
             {
@@ -57,12 +57,13 @@ namespace UI5TypeScriptGeneratorJsonGUI
             { "number" , "" },
             { "enum" , "" },
             { "string" , "" },
-            { "boolean" , "" }
+            { "boolean" , "" },
+            { "void", "" }
         };
 
-        private static bool IsDefaultType(string value)
+        public static bool IsBaseType(string type)
         {
-            return (Defaultvalues.ContainsKey(value));
+            return Defaultvalues.ContainsKey(type.Replace("[]", ""));
         }
     }
 }

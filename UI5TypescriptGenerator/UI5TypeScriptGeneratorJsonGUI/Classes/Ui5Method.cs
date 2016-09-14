@@ -10,21 +10,21 @@ namespace UI5TypeScriptGeneratorJsonGUI
     {
         public Ui5Value returnValue { get; set; }
         public List<Ui5Parameter> parameters { get; set; } = new List<Ui5Parameter>();
-        public string[] SerializeTypescriptMethodStubs(bool @explicit = false)
+        public string[] SerializeTypescriptMethodStubs(bool @explicit = false, bool createstatic = false)
         {               
             //return
             var optionalnotoptionalgroups = parameters.GroupBy(x => x.optional, y => y).ToDictionary(x=>x.Key, y=>y.ToList());
             if (optionalnotoptionalgroups.ContainsKey(false))
             {
                 if (optionalnotoptionalgroups.ContainsKey(true))
-                    return new string[] { CreateStub(optionalnotoptionalgroups[false].Concat(optionalnotoptionalgroups[true]), @explicit) };
+                    return new string[] { CreateStub(optionalnotoptionalgroups[false].Concat(optionalnotoptionalgroups[true]), @explicit, createstatic) };
                 else
-                    return new string[] { CreateStub(optionalnotoptionalgroups[false], @explicit) };
+                    return new string[] { CreateStub(optionalnotoptionalgroups[false], @explicit, createstatic) };
             }
             else if (optionalnotoptionalgroups.ContainsKey(true))
-                return new string[] { CreateStub(optionalnotoptionalgroups[true], @explicit) };
+                return new string[] { CreateStub(optionalnotoptionalgroups[true], @explicit, createstatic) };
             else
-                return new string[] { CreateStub(parameters, @explicit) };
+                return new string[] { CreateStub(parameters, @explicit, createstatic) };
             //int lastmandatoryindex = parameters.IndexOf(parameters.LastOrDefault(x => !x.optional));
             //// Last optional parameter is first parameter -> ok
             //if (lastmandatoryindex <= 0)
@@ -49,17 +49,17 @@ namespace UI5TypeScriptGeneratorJsonGUI
             //return new string[] { CreateStub(parameters) };
         }
 
-        public virtual string CreateStub(IEnumerable<Ui5Parameter> pars, bool @explicit)
+        public virtual string CreateStub(IEnumerable<Ui5Parameter> pars, bool @explicit, bool createstatic)
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendComment(CreateDescription(pars));
-            sb.Append(CreateDefinition(pars, @explicit));
+            sb.Append(CreateDefinition(pars, @explicit, createstatic));
             return sb.ToString();
         }
 
-        public string CreateDefinition(IEnumerable<Ui5Parameter> pars, bool @explicit)
+        public string CreateDefinition(IEnumerable<Ui5Parameter> pars, bool @explicit, bool createstatic, bool alwayspublic = true)
         {
-            return $"{(@explicit ? "function" : visibility.GetDescription())} {name}(" + pars.Aggregate("", (a, b) => a + ", " + b.name + (b.optional ? "?" : "") + (string.IsNullOrWhiteSpace(b.type) ? "" : ":" + b.GetRelativeTypeDef(absolutepath))).TrimStart(", ".ToCharArray()) + ")" + (returnValue != null && returnValue.type != null ? ": " + returnValue.GetRelativeTypeDef(absolutepath) : "");
+            return $"{(@explicit ? (@static && createstatic ? "static function " : "function ") : (createstatic && @static ? "static " : "") + (alwayspublic ? "" : visibility.GetDescription()))}{name}(" + pars.Where(x=>!string.IsNullOrWhiteSpace(x.name)).Aggregate("", (a, b) => a + ", " + b.name + (b.optional ? "?" : "") + (string.IsNullOrWhiteSpace(b.type) ? "" : ":" + b.GetRelativeTypeDef(owner))).TrimStart(", ".ToCharArray()) + ")" + (returnValue != null && returnValue.type != null ? ": " + returnValue.GetRelativeTypeDef(owner) : "");
         }
 
         public string CreateDescription(IEnumerable<Ui5Parameter> pars)

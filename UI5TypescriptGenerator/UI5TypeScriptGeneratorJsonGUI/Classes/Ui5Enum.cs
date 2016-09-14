@@ -5,23 +5,33 @@ namespace UI5TypeScriptGeneratorJsonGUI
 {
     public class Ui5Enum : Ui5Complex
     {
+
+        public Ui5Enum() { }
+        public Ui5Enum(Ui5Complex source)
+        {
+            basename = source.basename;
+            deprecated = source.deprecated;
+            description = source.description;
+            extends = source.extends;
+            methods = source.methods;
+            module = source.module;
+            name = source.fullname;
+            parentNamespace = source.parentNamespace;
+            properties = source.properties;
+            resource = source.resource;
+            since = source.since;
+            @static = source.@static;
+            visibility = source.visibility;
+        }
+
         public override string SerializeTypescript()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendComment(description);
-            if(properties.Count==0)
-            {
-                sb.AppendLine("type " + name + " = any;");
-                return sb.ToString();
-            }
-            sb.AppendLine("type " + name + " = ");
-            int i = 1;
-            foreach(Ui5Property prop in properties)
-            {
-                if (prop.description != null)
-                    sb.AppendComment(description);
-                sb.AppendLine("\"" + prop.name + "\"" + (i++ < properties.Count ? " |" : ";"));
-            }
+            sb.AppendLine($"class {name} {(extends != null ? "extends " + Ui5Value.GetRelativeTypeDef(this, extends) : "")}{"{"}");
+
+            AppendProperties(sb, true, true);
+
+            sb.AppendLine("}");
             return sb.ToString();
         }
     }

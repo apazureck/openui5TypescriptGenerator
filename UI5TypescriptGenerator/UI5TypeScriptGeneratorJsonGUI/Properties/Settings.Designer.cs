@@ -25,67 +25,26 @@ namespace UI5TypeScriptGeneratorJsonGUI.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute(@"* : any
-any[] : any[]
-array : any[]
-Array : any[]
-array.<array.<string>> : string[][]
-arraybuffer : any
-bAlwaysShow : boolean
-blob : any
-Boolean : boolean
-CalendarAppointment : any
-Control : sap.ui.Core.Control
-createDefaultContent : any
-date : any
-Date : any
-DomNode : any
-DOMNode : any
-domRef : any
-DomRef : any
-DOMRef : any
-DomRef[] : any[]
-element : any
-Element : any
-Element[] : any[]
-EntityType : any
-Error : any
-event : any
-float : number
-function : any
-Generator : any
-HTMLElement : any
-int : number
-int[] : number[]
-integer : number
-jQuery : any
-map : any
-Map : any
-MenuButton : any
-null :
-Number : number
-Number[] : number[]
-objec : any
-object : any
-Object : any
-object[] : any[]
-ObjectNumber : number
-oWindow : any
-Promise : any
-regexp : string
-sap.ui.core.Controller : sap.ui.core.mvc.Controller
-ScrollEnablement : sap.ui.core.delegate.ScrollEnablement
-sting[] : string[]
-String : string
-string[] : string[]
-String[] : string[]
-TablePersoController : any
-TablePersoDialog : any
-Touch : any
-TouchList : any
-true : boolean
-undefined : any
-Window : any")]
+        [global::System.Configuration.DefaultSettingValueAttribute("* : any\r\nany[] : any[]\r\narray : any[]\r\nArray : any[]\r\narray.<array.<string>> : st" +
+            "ring[][]\r\narraybuffer : any\r\nbAlwaysShow : boolean\r\nblob : any\r\nBoolean : boolea" +
+            "n\r\nCalendarAppointment : any\r\nControl : sap.ui.Core.Control\r\ncreateDefaultConten" +
+            "t : any\r\ndate : any\r\nDate : any\r\nDomNode : any\r\nDOMNode : any\r\ndomRef : any\r\nDom" +
+            "Ref : any\r\nDOMRef : any\r\nDomRef[] : any[]\r\nelement : any\r\nElement : any\r\nElement" +
+            "[] : any[]\r\nEntityType : any\r\nError : any\r\nevent : any\r\nfloat : number\r\nfunction" +
+            " : any\r\nGenerator : any\r\nHTMLElement : any\r\nint : number\r\nint[] : number[]\r\ninte" +
+            "ger : number\r\njQuery : any\r\njQuery.promise : any\r\njQuery.sap.log : any\r\njQuery.s" +
+            "ap.util.ResourceBundle : any\r\nManagedObjectMetadata : any\r\nmap : any\r\nMap : any\r" +
+            "\nMenuButton : any\r\nnull :\r\nNumber : number\r\nNumber[] : number[]\r\nobjec : any\r\nob" +
+            "ject : any\r\nObject : any\r\nobject[] : any[]\r\nObjectNumber : number\r\noWindow : any" +
+            "\r\nP13nConditionOperation[] : any[]\r\nPromise : any\r\nqunit : any\r\nregexp : string\r" +
+            "\nsap.m.DynamicSideContent : sap.ui.layout.DynamicSideContent\r\nsap.ui.base.Manage" +
+            "Object : sap.ui.base.ManagedObject\r\nsap.ui.Core.Control : sap.ui.core.Control\r\ns" +
+            "ap.ui.core.Controller : sap.ui.core.mvc.Controller\r\nsap.ui.core.InvisibleControl" +
+            " : any\r\nsap.util.Properties : any\r\nScrollEnablement : sap.ui.core.delegate.Scrol" +
+            "lEnablement\r\nsting[] : string[]\r\nString : string\r\nstring[] : string[]\r\nString[] " +
+            ": string[]\r\nTablePersoController : any\r\nTablePersoDialog : any\r\nTabStripItem : a" +
+            "ny\r\nTouch : any\r\nTouchList : any\r\ntrue : boolean\r\nUI5EntityCueCardStyle : any\r\nu" +
+            "ndefined : any\r\nWindow : any")]
         public string TypeReplacements {
             get {
                 return ((string)(this["TypeReplacements"]));
@@ -156,7 +115,23 @@ sap/uxap/designtime/api.json")]
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute(@"sap.ui.core.BusyIndicator : Ui5Enum
+sap.ui.core.Collision : string
+sap.ui.core.CSSSize : string
+sap.ui.core.Dock : string
+sap.ui.core.ID : string
+sap.ui.core.Popup.Dock : string
+sap.ui.core.URI : string
+sap.ui.core.ws.ReadyState : Ui5Enum
+sap.ui.layout.BlockBackgroundType : Ui5Enum
+sap.ui.layout.form.GridElementCells : string|number
+sap.ui.layout.GridIndent : string
+sap.ui.layout.GridSpan : string
+sap.ui.model.analytics.odata4analytics.SortOrder : Ui5Enum
+sap.ui.model.BindingMode : Ui5Enum
+sap.ui.model.FilterType : Ui5Enum
+sap.ui.model.odata.CountMode : Ui5Enum
+sap.ui.suite.TaskCircleColor : string")]
         public string TypeDefinitions {
             get {
                 return ((string)(this["TypeDefinitions"]));

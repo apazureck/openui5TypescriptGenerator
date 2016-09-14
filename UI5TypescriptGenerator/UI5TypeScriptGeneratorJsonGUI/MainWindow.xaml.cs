@@ -75,7 +75,7 @@ namespace UI5TypeScriptGeneratorJsonGUI
                     try
                     {
                         // Split text and create dictionary
-                        globalValues.TranslationDictionary = CreateDictionaryFromConfigString(Settings.TypeDefinitions);
+                        globalValues.Typedefinitions = CreateDictionaryFromConfigString(Settings.TypeDefinitions);
                         Settings.TypeDefinitions = globalValues.Typedefinitions.OrderBy(x => x.Key).Select(x => x.Key + " : " + x.Value).Aggregate((a, b) => a.Trim() + Environment.NewLine + b).Trim();
                         Settings.Save();
                         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TypeDefinitions)));
@@ -146,8 +146,6 @@ namespace UI5TypeScriptGeneratorJsonGUI
             }
         }
 
-        private string version;
-
         public string Version
         {
             get { return Settings.Version; }
@@ -166,18 +164,32 @@ namespace UI5TypeScriptGeneratorJsonGUI
 
                 var allsymbols = allDocs.Select(x => x.symbols).Aggregate((a, b) => a.Union(b, new SymbolEqualityComparer()).ToList()).GroupBy(x => x.GetType().Name, y => y).ToDictionary(key => key.Key, value => value.ToList());
 
-                var alldistinctcomplex = allsymbols[typeof(Ui5Class).Name].Cast<Ui5Complex>().Distinct(new ComplexEqualityComparer())
-                .Concat(allsymbols[typeof(Ui5Interface).Name].Cast<Ui5Complex>().Distinct(new ComplexEqualityComparer()))
-                .Concat(allsymbols[typeof(Ui5Enum).Name].Cast<Ui5Complex>().Distinct(new ComplexEqualityComparer()))
-                .OrderBy(x=> x.@namespace+"."+x.name).ToList();
-                alldistinctcomplex = alldistinctcomplex.Where(x => x.IncludedInVersion()).ToList();
+                var allnamespaces = allsymbols[typeof(Ui5Namespace).Name].Cast<Ui5Namespace>().Distinct(new ComplexEqualityComparer()).Where(x => x.IncludedInVersion()).ToList();
+                var allrealnamespaces = allnamespaces.Where(x => x.description != null && !x.description.TrimStart().StartsWith("Enumeration of") && !(globalValues.Typedefinitions.ContainsKey(x.fullname) && globalValues.Typedefinitions[x.fullname] == "Ui5Enum")).ToList();
 
-                foreach (Ui5Complex type in alldistinctcomplex.Concat(allsymbols[typeof(Ui5Namespace).Name].Cast<Ui5Complex>().Distinct(new ComplexEqualityComparer())))
+                var enums = allnamespaces.Where(x => !allrealnamespaces.Contains(x)).Select(x => new Ui5Enum(x));
+
+                var alldistinctcomplex = allsymbols[typeof(Ui5Class).Name].Cast<Ui5Complex>().Distinct(new ComplexEqualityComparer()).ToList();
+                alldistinctcomplex = alldistinctcomplex.Concat(allsymbols[typeof(Ui5Interface).Name].Cast<Ui5Complex>().Distinct(new ComplexEqualityComparer())).ToList();
+                alldistinctcomplex = alldistinctcomplex.Concat(allsymbols[typeof(Ui5Enum).Name].Cast<Ui5Complex>().Distinct(new ComplexEqualityComparer())).ToList();
+                alldistinctcomplex = alldistinctcomplex.Concat(enums.Cast<Ui5Complex>()).ToList();
+                alldistinctcomplex = alldistinctcomplex.OrderBy(x=> x.fullname).ToList();
+                var alldistinctcomplexlist = alldistinctcomplex.Where(x => x.IncludedInVersion()).ToList();
+
+                foreach (Ui5Complex type in alldistinctcomplexlist.Concat(allrealnamespaces))
                     type.SetAbsolutePathsOnMembers();
 
-                List<Ui5Complex> results = AddToNamespaces(allsymbols[typeof(Ui5Namespace).Name].Cast<Ui5Namespace>(), alldistinctcomplex);
+                List<Ui5Complex> results = AddToNamespaces(allrealnamespaces.Cast<Ui5Namespace>(), alldistinctcomplexlist);
 
-                Log("Found " + alldistinctcomplex.Count() + " classes.");
+                foreach(Ui5Namespace result in results.OfType<Ui5Namespace>())
+                    SetParents(result);
+
+                AppendCustomTypeDefinitions(results);
+
+                foreach (Ui5Namespace result in results.OfType<Ui5Namespace>())
+                    SetParents(result);
+
+                Log("Found " + alldistinctcomplexlist.Count() + " classes.");
                 Log("Creating " + results.Count + " files with declarations.");
 
                 CreateTypeDefinitionFiles(results);
@@ -187,6 +199,63 @@ namespace UI5TypeScriptGeneratorJsonGUI
                 Output = globalValues.UntouchedTypes.Select(x => x.Key + "(" + x.Value.ToString() + ")").OrderBy(x => x).Aggregate((a, b) => a + Environment.NewLine + b);
 
             });
+        }
+
+        private void MergeDuplicateNamespaces(List<Ui5Complex> result)
+        {
+            var flatresults = result.Flatten(x => x.Content);
+            var ddic = flatresults.GroupBy(x => x.fullname)
+              .Where(g => g.Count() > 1).ToDictionary(x=>x.Key, y=>y.ToList());
+
+        }
+
+        private void AppendCustomTypeDefinitions(List<Ui5Complex> results)
+        {
+            foreach(var entry in globalValues.Typedefinitions)
+            {
+                if (entry.Value.Equals(nameof(Ui5Enum)) || entry.Value.Equals(nameof(Ui5Enum)))
+                    continue;
+                Ui5Complex toreplace = GetElementByPath(results, entry.Key);
+
+                if(toreplace==null)
+                {
+                    // if not found try to get the namespace
+                    string[] arr = entry.Key.Split('.');
+                    Ui5Namespace @namespace = GetElementByPath(results, arr.Take(arr.Length - 1).Aggregate((a, b) => a + "." + b)) as Ui5Namespace;
+                    if(toreplace==null)
+                    {
+                        Log("Could not find element to replace with Type '" + entry.Key + "'");
+                        continue;
+                    }
+                    // Create a dummy (to reuse code below)
+                    toreplace = new Ui5Class { parentNamespace = @namespace };
+                }
+
+                if (!entry.Value.StartsWith("{"))
+                {
+                    StringBuilder sb = new StringBuilder();
+                    if (toreplace.description != null)
+                        sb.AppendComment(toreplace.description);
+                    sb.AppendLine($"type {toreplace.name} = {entry.Value};");
+                    toreplace.parentNamespace?.AppendAdditionalTypedef(sb.ToString());
+                    toreplace.parentNamespace?.Content.Remove(toreplace);
+                }
+
+            }
+        }
+
+        private Ui5Complex GetElementByPath(List<Ui5Complex> results, string key)
+        {
+            var a = results.Flatten(x => x.Content).OrderBy(x=>x.name).ToList();
+            return results.Flatten(x => x.Content).FirstOrDefault(x => x.fullname == key);
+        }
+
+        private void SetParents(Ui5Namespace result)
+        {
+            foreach (Ui5Complex entry in result.Content)
+                entry.parentNamespace = result;
+            foreach (Ui5Namespace @namespace in result.Content.OfType<Ui5Namespace>())
+                SetParents(@namespace);
         }
 
         private List<Ui5Complex> AddToNamespaces(IEnumerable<Ui5Namespace> namespaces, List<Ui5Complex> alldistinctcomplex)
@@ -204,8 +273,6 @@ namespace UI5TypeScriptGeneratorJsonGUI
             List<Ui5Namespace> innerlist = new List<Ui5Namespace>(namespaces);
             // cast to ui5complex for code reuse.
             List<Ui5Complex> result = CreateNamespaceHierarchy(namespaces, innerlist);
-
-            List<Ui5Namespace> newnamespaces = new List<Ui5Namespace>();
 
             // filter the namespaces that have a namespace which is not explicitly defined
             foreach (Ui5Namespace entry in result.ToList())
@@ -232,7 +299,7 @@ namespace UI5TypeScriptGeneratorJsonGUI
                 {
                     Ui5Namespace ns = new Ui5Namespace
                     {
-                        name = entry.@namespace.Split('.').TakeWhile(x => x != address[0]).Aggregate((a, b) => a + "." + b)
+                        name = entry.@namespace.Split('.').TakeWhile(x => x != address[0]).Aggregate((a, b) => a + "." + b)+"."+address[0]
                     };
                     content.Add(ns);
                     AppendOnNamespace(ns.Content, entry, address.Skip(1).ToArray());
@@ -276,6 +343,7 @@ namespace UI5TypeScriptGeneratorJsonGUI
             foreach (Ui5Namespace entry in namespaces)
                 if (entry.parentNamespace == null)
                     result.Add(entry);
+
             return result;
         }
 
@@ -291,7 +359,10 @@ namespace UI5TypeScriptGeneratorJsonGUI
                     {
                         namespaces.AddRange(namespc.Content);
                         // set parent to null to force file creation.
-                        namespc.Content.Cast<Ui5Namespace>().ToList().ForEach(x => x.parentNamespace = null);
+                        namespc.Content.Cast<Ui5Namespace>().ToList().ForEach(x => {
+                            x.parentNamespace = null;
+                            x.Imports = namespc.Imports;
+                            });
                         namespaces.Remove(namespc);
                     }
 

@@ -30,7 +30,7 @@ namespace UI5TypeScriptGeneratorJsonGUI
                 var wishedversion = Properties.Settings.Default.Version.Split('.').Select(x => int.Parse(x)).ToArray();
                 var gotversion = since.Split('.').Take(wishedversion.Length).Select(x => int.Parse(x)).ToArray();
                 for (int i = 0; i < wishedversion.Length && i < gotversion.Length; i++)
-                    if (!(wishedversion[i] < gotversion[i]))
+                    if (!(wishedversion[i] >= gotversion[i]))
                         return false;
             }
 

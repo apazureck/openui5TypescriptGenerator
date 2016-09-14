@@ -29,18 +29,18 @@ namespace UI5TypeScriptGeneratorJsonGUI
             }
         }
 
-        protected void AppendProperties(StringBuilder sb, bool @explicit = false)
+        protected void AppendProperties(StringBuilder sb, bool @explicit = false, bool checkstatic = false)
         {
             foreach (Ui5Property property in properties)
                 if (property.IncludedInVersion())
-                    sb.AppendLine(property.SerializeTypescript(@explicit), 1);
+                    sb.AppendLine(property.SerializeTypescript(@explicit, checkstatic), 1);
         }
 
-        protected void AppendMethods(StringBuilder sb, bool @explicit = false)
+        protected void AppendMethods(StringBuilder sb, bool @explicit = false, bool createstatic = false)
         {
             foreach (Ui5Method method in methods)
                 if (method.IncludedInVersion())
-                    sb.AppendLine(method.SerializeTypescriptMethodStubs(@explicit).Aggregate((a, b) => a + ";" + Environment.NewLine + b) + ";", 1);
+                    sb.AppendLine(method.SerializeTypescriptMethodStubs(@explicit, createstatic).Aggregate((a, b) => a + ";" + Environment.NewLine + b) + ";", 1);
         }
 
         public string fullname { get { return (string.IsNullOrWhiteSpace(@namespace) ? "" : @namespace + ".") + name; } }
@@ -51,7 +51,9 @@ namespace UI5TypeScriptGeneratorJsonGUI
         {
             IEnumerable<Ui5Member> members = methods.Cast<Ui5Member>().Concat(properties);
             foreach (Ui5Member member in members)
-                member.absolutepath = @namespace;
+            {
+                member.owner = this;
+            }
         }
 
         public string @namespace
@@ -63,5 +65,11 @@ namespace UI5TypeScriptGeneratorJsonGUI
 
         [JsonConverter(typeof(StringEnumConverter))]
         public Visibility visibility { get; set; }
+
+        public Ui5Namespace parentNamespace { get; set; }
+
+        public List<Ui5Complex> Content = new List<Ui5Complex>();
+
+        override protected string DebuggerDisplay => $"{GetType().Name}: {name} ({fullname})";
     }
 }

@@ -17,7 +17,7 @@ namespace UI5TypeScriptGeneratorJsonGUI
         override public string SerializeTypescript()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"class {name} {(extends != null ? "extends " + extends : "")}{"{"}");
+            sb.AppendLine($"class {name} {(extends != null ? "extends " + Ui5Value.GetRelativeTypeDef(this, extends) : "")}{"{"}");
             if (constructor.visibility == Visibility.Public && constructor.IncludedInVersion())
                 sb.AppendLine(constructor.SerializeTypescriptMethodStubs().Aggregate((a, b) => a + ";" + Environment.NewLine + b) + ";", 1);
 
