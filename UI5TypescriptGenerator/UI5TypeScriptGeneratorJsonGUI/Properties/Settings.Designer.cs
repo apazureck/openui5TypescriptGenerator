@@ -32,19 +32,28 @@ namespace UI5TypeScriptGeneratorJsonGUI.Properties {
             "Ref : any\r\nDOMRef : any\r\nDomRef[] : any[]\r\nelement : any\r\nElement : any\r\nElement" +
             "[] : any[]\r\nEntityType : any\r\nError : any\r\nevent : any\r\nfloat : number\r\nfunction" +
             " : any\r\nGenerator : any\r\nHTMLElement : any\r\nint : number\r\nint[] : number[]\r\ninte" +
-            "ger : number\r\njQuery : any\r\njQuery.promise : any\r\njQuery.sap.log : any\r\njQuery.s" +
-            "ap.util.ResourceBundle : any\r\nManagedObjectMetadata : any\r\nmap : any\r\nMap : any\r" +
-            "\nMenuButton : any\r\nnull :\r\nNumber : number\r\nNumber[] : number[]\r\nobjec : any\r\nob" +
-            "ject : any\r\nObject : any\r\nobject[] : any[]\r\nObjectNumber : number\r\noWindow : any" +
-            "\r\nP13nConditionOperation[] : any[]\r\nPromise : any\r\nqunit : any\r\nregexp : string\r" +
-            "\nsap.m.DynamicSideContent : sap.ui.layout.DynamicSideContent\r\nsap.ui.base.Manage" +
-            "Object : sap.ui.base.ManagedObject\r\nsap.ui.Core.Control : sap.ui.core.Control\r\ns" +
-            "ap.ui.core.Controller : sap.ui.core.mvc.Controller\r\nsap.ui.core.InvisibleControl" +
-            " : any\r\nsap.util.Properties : any\r\nScrollEnablement : sap.ui.core.delegate.Scrol" +
+            "ger : number\r\nInvisibleControl : any\r\njQuery : any\r\njQuery.promise : any\r\njQuery" +
+            ".Promise : any\r\njQuery.sap.log : jQuery.sap.log.Logger\r\nmap : any\r\nMap : any\r\nMe" +
+            "nuButton : any\r\nnull :\r\nNumber : number\r\nNumber[] : number[]\r\nobjec : any\r\nobjec" +
+            "t : any\r\nObject : any\r\nobject[] : any[]\r\nObjectNumber : number\r\noWindow : any\r\nP" +
+            "romise : any\r\nregexp : string\r\nsap.m.Control : sap.ui.core.Control\r\nsap.m.Dynami" +
+            "cSideContent : sap.ui.layout.DynamicSideContent\r\nsap.m.P13nConditionOperation : " +
+            "any\r\nsap.m.P13nConditionOperation[] : any[]\r\nsap.m.TabStripItem : any\r\nsap.ui.ba" +
+            "se.ManagedObjectMetadata : any\r\nsap.ui.base.ManageObject : sap.ui.base.ManagedOb" +
+            "ject\r\nsap.ui.Core.Control : sap.ui.core.Control\r\nsap.ui.core.Controller : sap.ui" +
+            ".core.mvc.Controller\r\nsap.ui.core.Integer : sap.ui.model.type.Integer\r\nsap.ui.co" +
+            "re.InvisibleControl : any\r\nsap.ui.core.message.MessageModel : sap.ui.model.messa" +
+            "ge.MessageModel\r\nsap.ui.core.Model : sap.ui.model.Model\r\nsap.ui.core.String : sa" +
+            "p.ui.model.type.String\r\nsap.ui.demokit.UI5EntityCueCardStyle : any\r\nsap.ui.messa" +
+            "ge.MessagePaser : sap.ui.core.message.MessageParser\r\nsap.ui.message.MessageProce" +
+            "ssor : sap.ui.core.message.MessageProcessor\r\nsap.ui.model.analytics.odata4analyt" +
+            "ics.ParametrizationRequest : any\r\nsap.ui.model.odata.Filter[] : sap.ui.model.Fil" +
+            "ter[]\r\nsap.ui.model.odata.OdataListBinding : sap.ui.model.odata.ODataListBinding" +
+            "\r\nsap.ui.model.odata.v4.lib._MetadataRequestor : any\r\nsap.ui.suite.TaskCircleCol" +
+            "or : any\r\nsap.ui.test.qunit : any\r\nScrollEnablement : sap.ui.core.delegate.Scrol" +
             "lEnablement\r\nsting[] : string[]\r\nString : string\r\nstring[] : string[]\r\nString[] " +
-            ": string[]\r\nTablePersoController : any\r\nTablePersoDialog : any\r\nTabStripItem : a" +
-            "ny\r\nTouch : any\r\nTouchList : any\r\ntrue : boolean\r\nUI5EntityCueCardStyle : any\r\nu" +
-            "ndefined : any\r\nWindow : any")]
+            ": string[]\r\nTablePersoController : any\r\nTablePersoDialog : any\r\nTouch : any\r\nTou" +
+            "chList : any\r\ntrue : boolean\r\nundefined : any\r\nWindow : any")]
         public string TypeReplacements {
             get {
                 return ((string)(this["TypeReplacements"]));
@@ -115,12 +124,27 @@ sap/uxap/designtime/api.json")]
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute(@"sap.ui.core.BusyIndicator : Ui5Enum
+        [global::System.Configuration.DefaultSettingValueAttribute(@"jQuery.sap.act : Ui5Enum
+jQuery.sap.history.NavType : Ui5Enum
+jQuery.sap.interaction : Ui5Enum
+jQuery.sap.KeyCodes : Ui5Enum
+jQuery.sap.log.Level : Ui5Enum
+jQuery.sap.PseudoEvents : Ui5Enum
+jQuery.sap.storage.Type : Ui5Enum
+sap.m.MessageBox.Action : Ui5Enum
+sap.m.MessageBox.Icon : Ui5Enum
+sap.ui.core.BusyIndicator : Ui5Enum
+sap.ui.core.BusyIndicatorUtils : Ui5Enum
 sap.ui.core.Collision : string
+sap.ui.core.CSSColor : string
 sap.ui.core.CSSSize : string
+sap.ui.core.delegate : Ui5Enum
 sap.ui.core.Dock : string
 sap.ui.core.ID : string
+sap.ui.core.message : Ui5Enum
+sap.ui.core.mvc : Ui5Enum
 sap.ui.core.Popup.Dock : string
+sap.ui.core.theming : Ui5Enum
 sap.ui.core.URI : string
 sap.ui.core.ws.ReadyState : Ui5Enum
 sap.ui.layout.BlockBackgroundType : Ui5Enum
@@ -129,9 +153,14 @@ sap.ui.layout.GridIndent : string
 sap.ui.layout.GridSpan : string
 sap.ui.model.analytics.odata4analytics.SortOrder : Ui5Enum
 sap.ui.model.BindingMode : Ui5Enum
+sap.ui.model.FilterOperator : Ui5Enum
 sap.ui.model.FilterType : Ui5Enum
 sap.ui.model.odata.CountMode : Ui5Enum
-sap.ui.suite.TaskCircleColor : string")]
+sap.ui.model.odata.ODataUtils : Ui5Enum
+sap.ui.model.TreeBindingUtils : Ui5Enum
+sap.ui.SplitterSize : string
+sap.ui.suite.TaskCircleColor : string
+sap.uxap.BlockBaseColumnLayout : string|number")]
         public string TypeDefinitions {
             get {
                 return ((string)(this["TypeDefinitions"]));
@@ -143,7 +172,7 @@ sap.ui.suite.TaskCircleColor : string")]
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("extends :\r\ngetMetadata :")]
+        [global::System.Configuration.DefaultSettingValueAttribute("extend :\r\ngetMetadata :")]
         public string SkipMethods {
             get {
                 return ((string)(this["SkipMethods"]));
@@ -155,7 +184,17 @@ sap.ui.suite.TaskCircleColor : string")]
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute(@"# file: jQuery.d.ts
+REPLACE(sap.ui, sapui)
+ADD(@start, import sapui = sap.ui;)
+# file: sap.m.d.ts
+REMOVE(import sapimport = sap;)
+# file: sap.tnt.d.ts
+REMOVE(import sapimport = sap;)
+# file: sap.uxap.d.ts
+REMOVE(import sapimport = sap;)
+# file: sap.ui.d.ts
+REMOVE(import sapimport = sap;)")]
         public string PostProcessing {
             get {
                 return ((string)(this["PostProcessing"]));

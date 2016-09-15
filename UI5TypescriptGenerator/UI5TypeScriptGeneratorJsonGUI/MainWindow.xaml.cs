@@ -241,7 +241,6 @@ namespace UI5TypeScriptGeneratorJsonGUI
                 Log("Conversion successfully executed.");
 
                 Output = globalValues.UntouchedTypes.Select(x => x.Key + "(" + x.Value.ToString() + ")").OrderBy(x => x).Aggregate((a, b) => a + Environment.NewLine + b);
-
             });
         }
 
