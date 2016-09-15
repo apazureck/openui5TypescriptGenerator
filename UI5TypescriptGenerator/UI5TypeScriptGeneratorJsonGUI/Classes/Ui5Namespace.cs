@@ -31,13 +31,13 @@ namespace UI5TypeScriptGeneratorJsonGUI
             else
                 sb.AppendLine("namespace " + name + " {");
 
-            Content.ForEach(x =>
-            {
+            // using for to make the collection changeable during execution
+            for (int i = 0; i < Content.Count; i++) {
                 sb.AppendLine();
-                sb.AppendLine(x.SerializeTypescript(), 1);
-            });
+                sb.AppendLine(Content[i].SerializeTypescript(), 1);
+            }
 
-            AppendProperties(sb, true, false);
+            AppendProperties(sb, @explicit: true, checkstatic: false);
 
             AppendMethods(sb, true, false);
 

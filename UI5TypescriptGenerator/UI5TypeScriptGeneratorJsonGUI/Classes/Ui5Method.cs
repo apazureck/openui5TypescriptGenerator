@@ -8,58 +8,93 @@ namespace UI5TypeScriptGeneratorJsonGUI
 {
     public class Ui5Method : Ui5Member
     {
+        public Ui5Method() { }
+        public Ui5Method(Ui5Method x, Ui5Complex newowner)
+        {
+            deprecated = x.deprecated;
+            description = x.description;
+            name = x.name;
+            owner = newowner;
+            parameters = x.parameters.Select(y => y.Clone() as Ui5Parameter).ToList();
+            returnValue = x.returnValue != null ? new Ui5Value(x.returnValue) : null;
+            since = x.since;
+            @static = x.@static;
+            visibility = x.visibility;
+        }
+
         public Ui5Value returnValue { get; set; }
         public List<Ui5Parameter> parameters { get; set; } = new List<Ui5Parameter>();
         public string[] SerializeTypescriptMethodStubs(bool @explicit = false, bool createstatic = false)
-        {               
+        {
             //return
+
+            string[] stubs;
+
             var optionalnotoptionalgroups = parameters.GroupBy(x => x.optional, y => y).ToDictionary(x=>x.Key, y=>y.ToList());
             if (optionalnotoptionalgroups.ContainsKey(false))
             {
                 if (optionalnotoptionalgroups.ContainsKey(true))
-                    return new string[] { CreateStub(optionalnotoptionalgroups[false].Concat(optionalnotoptionalgroups[true]), @explicit, createstatic) };
+                    stubs = new string[] { CreateStub(optionalnotoptionalgroups[false].Concat(optionalnotoptionalgroups[true]), @explicit, createstatic) };
                 else
-                    return new string[] { CreateStub(optionalnotoptionalgroups[false], @explicit, createstatic) };
+                    stubs = new string[] { CreateStub(optionalnotoptionalgroups[false], @explicit, createstatic) };
             }
             else if (optionalnotoptionalgroups.ContainsKey(true))
-                return new string[] { CreateStub(optionalnotoptionalgroups[true], @explicit, createstatic) };
+                stubs = new string[] { CreateStub(optionalnotoptionalgroups[true], @explicit, createstatic) };
             else
-                return new string[] { CreateStub(parameters, @explicit, createstatic) };
-            //int lastmandatoryindex = parameters.IndexOf(parameters.LastOrDefault(x => !x.optional));
-            //// Last optional parameter is first parameter -> ok
-            //if (lastmandatoryindex <= 0)
-            //    return new string[] { CreateStub(parameters) };
+                stubs = new string[] { CreateStub(parameters, @explicit, createstatic) };
 
-            //// Otherwise you have to check if there are optional parameters before
-            //int firstoptionalindex = parameters.IndexOf(parameters.FirstOrDefault(x => x.optional));
-
-            //// Only non optional indizes are before the first optional
-            //if (firstoptionalindex > -1 && firstoptionalindex < lastmandatoryindex)
-            //{
-            //    List<string> retlist = new List<string>();
-            //    // Create overload without leading optional parameters
-            //    List<Ui5Parameter> plit = parameters.Select(p => p.Clone() as Ui5Parameter).ToList();
-            //    retlist.Add(CreateStub(plit.SkipWhile(x => x.optional)));
-            //    // Create Overload with optional leading parameters as not optional parameters
-            //    plit.TakeWhile(x => x.optional).ToList().ForEach(x => x.optional = false);
-            //    retlist.Add(CreateStub(plit));
-            //    return retlist.ToArray();
-            //}
-
-            //return new string[] { CreateStub(parameters) };
+            return stubs.Where(x => x != null).ToArray();
         }
 
+        public string[] GetMethodDefinitions(bool @explicit = false, bool createstatic = false)
+        {
+            string lname = name;
+            if (globalValues.SkipMethods.ContainsKey(name))
+                lname = globalValues.SkipMethods[name];
+            if (string.IsNullOrWhiteSpace(lname))
+                return null;
+
+            string[] stubs;
+
+            var optionalnotoptionalgroups = parameters.GroupBy(x => x.optional, y => y).ToDictionary(x => x.Key, y => y.ToList());
+            if (optionalnotoptionalgroups.ContainsKey(false))
+            {
+                if (optionalnotoptionalgroups.ContainsKey(true))
+                    stubs = new string[] { CreateDefinition(optionalnotoptionalgroups[false].Concat(optionalnotoptionalgroups[true]), lname, @explicit, createstatic) };
+                else
+                    stubs = new string[] { CreateDefinition(optionalnotoptionalgroups[false], lname, @explicit, createstatic) };
+            }
+            else if (optionalnotoptionalgroups.ContainsKey(true))
+                stubs = new string[] { CreateDefinition(optionalnotoptionalgroups[true], lname, @explicit, createstatic) };
+            else
+                stubs = new string[] { CreateDefinition(parameters, lname, @explicit, createstatic) };
+
+            return stubs.Where(x => x != null).ToArray();
+        }
+
+        /// <summary>
+        /// Returns null if skipped
+        /// </summary>
+        /// <param name="pars"></param>
+        /// <param name="explicit"></param>
+        /// <param name="createstatic"></param>
+        /// <returns></returns>
         public virtual string CreateStub(IEnumerable<Ui5Parameter> pars, bool @explicit, bool createstatic)
         {
+            string lname = name;
+            if (globalValues.SkipMethods.ContainsKey(name))
+                lname = globalValues.SkipMethods[name];
+            if (string.IsNullOrWhiteSpace(lname))
+                return null;
             StringBuilder sb = new StringBuilder();
             sb.AppendComment(CreateDescription(pars));
-            sb.Append(CreateDefinition(pars, @explicit, createstatic));
+            sb.Append(CreateDefinition(pars, lname, @explicit, createstatic));
             return sb.ToString();
         }
 
-        public string CreateDefinition(IEnumerable<Ui5Parameter> pars, bool @explicit, bool createstatic, bool alwayspublic = true)
+        public string CreateDefinition(IEnumerable<Ui5Parameter> pars, string name, bool @explicit, bool createstatic, bool alwayspublic = true)
         {
-            return $"{(@explicit ? (@static && createstatic ? "static function " : "function ") : (createstatic && @static ? "static " : "") + (alwayspublic ? "" : visibility.GetDescription()))}{name}(" + pars.Where(x=>!string.IsNullOrWhiteSpace(x.name)).Aggregate("", (a, b) => a + ", " + b.name + (b.optional ? "?" : "") + (string.IsNullOrWhiteSpace(b.type) ? "" : ":" + b.GetRelativeTypeDef(owner))).TrimStart(", ".ToCharArray()) + ")" + (returnValue != null && returnValue.type != null ? ": " + returnValue.GetRelativeTypeDef(owner) : "");
+            return $"{(@explicit ? (@static && createstatic ? "static function " : "function ") : (createstatic && @static ? "static " : "") + (alwayspublic ? "" : visibility.GetDescription()))}{name}(" + pars.Where(x=>!string.IsNullOrWhiteSpace(x.name)).Aggregate("", (a, b) => a + ", " + b.name + (b.optional ? "?" : "") + (string.IsNullOrWhiteSpace(b.type) ? "" : ": " + b.GetRelativeTypeDef(owner))).TrimStart(", ".ToCharArray()) + ")" + (returnValue != null && returnValue.type != null ? ": " + returnValue.GetRelativeTypeDef(owner) : "");
         }
 
         public string CreateDescription(IEnumerable<Ui5Parameter> pars)

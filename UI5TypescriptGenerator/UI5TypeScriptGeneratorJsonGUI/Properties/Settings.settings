@@ -120,5 +120,12 @@ sap.ui.model.FilterType : Ui5Enum
 sap.ui.model.odata.CountMode : Ui5Enum
 sap.ui.suite.TaskCircleColor : string</Value>
     </Setting>
+    <Setting Name="SkipMethods" Type="System.String" Scope="User">
+      <Value Profile="(Default)">extends :
+getMetadata :</Value>
+    </Setting>
+    <Setting Name="PostProcessing" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

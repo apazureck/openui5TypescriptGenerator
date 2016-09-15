@@ -28,6 +28,7 @@ namespace UI5TypeScriptGeneratorJsonGUI
 
             globalValues.TranslationDictionary = CreateDictionaryFromConfigString(Settings.TypeReplacements);
             globalValues.Typedefinitions = CreateDictionaryFromConfigString(Settings.TypeDefinitions);
+            globalValues.SkipMethods = CreateDictionaryFromConfigString(Settings.SkipMethods);
 
             restclient = new RestClient(Settings.ServiceAddress);
 
@@ -36,6 +37,14 @@ namespace UI5TypeScriptGeneratorJsonGUI
 
             DataContext = this;
 
+        }
+
+        private string postProcessing;
+
+        public string PostProcessing
+        {
+            get { return Settings.PostProcessing; }
+            set { Settings.PostProcessing = value; Settings.Save(); PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PostProcessing))); }
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -64,6 +73,26 @@ namespace UI5TypeScriptGeneratorJsonGUI
             }
         }
 
+        public string SkipMethods
+        {
+            get { return Settings.SkipMethods; }
+            set
+            {
+                Settings.SkipMethods = value.Trim();
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        // Split text and create dictionary
+                        globalValues.SkipMethods = CreateDictionaryFromConfigString(Settings.SkipMethods);
+                        Settings.SkipMethods = globalValues.SkipMethods.OrderBy(x => x.Key).Select(x => x.Key + " : " + x.Value).Aggregate((a, b) => a.Trim() + Environment.NewLine + b).Trim();
+                        Settings.Save();
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SkipMethods)));
+                    }
+                    catch { }
+                });
+            }
+        }
         public string TypeDefinitions
         {
             get { return Settings.TypeDefinitions; }
@@ -165,15 +194,18 @@ namespace UI5TypeScriptGeneratorJsonGUI
                 var allsymbols = allDocs.Select(x => x.symbols).Aggregate((a, b) => a.Union(b, new SymbolEqualityComparer()).ToList()).GroupBy(x => x.GetType().Name, y => y).ToDictionary(key => key.Key, value => value.ToList());
 
                 var allnamespaces = allsymbols[typeof(Ui5Namespace).Name].Cast<Ui5Namespace>().Distinct(new ComplexEqualityComparer()).Where(x => x.IncludedInVersion()).ToList();
-                var allrealnamespaces = allnamespaces.Where(x => x.description != null && !x.description.TrimStart().StartsWith("Enumeration of") && !(globalValues.Typedefinitions.ContainsKey(x.fullname) && globalValues.Typedefinitions[x.fullname] == "Ui5Enum")).ToList();
+                var allrealnamespaces = allnamespaces.Where(x =>
+                    {
+                        return !(globalValues.Typedefinitions.ContainsKey(x.fullname) && globalValues.Typedefinitions[x.fullname] == "Ui5Enum");
+                    }).ToList();
 
-                var enums = allnamespaces.Where(x => !allrealnamespaces.Contains(x)).Select(x => new Ui5Enum(x));
+                var enums = allnamespaces.Where(x => globalValues.Typedefinitions.ContainsKey(x.fullname) && globalValues.Typedefinitions[x.fullname] == "Ui5Enum").Select(x=> new Ui5Enum(x)).ToList();
 
                 var alldistinctcomplex = allsymbols[typeof(Ui5Class).Name].Cast<Ui5Complex>().Distinct(new ComplexEqualityComparer()).ToList();
                 alldistinctcomplex = alldistinctcomplex.Concat(allsymbols[typeof(Ui5Interface).Name].Cast<Ui5Complex>().Distinct(new ComplexEqualityComparer())).ToList();
                 alldistinctcomplex = alldistinctcomplex.Concat(allsymbols[typeof(Ui5Enum).Name].Cast<Ui5Complex>().Distinct(new ComplexEqualityComparer())).ToList();
                 alldistinctcomplex = alldistinctcomplex.Concat(enums.Cast<Ui5Complex>()).ToList();
-                alldistinctcomplex = alldistinctcomplex.OrderBy(x=> x.fullname).ToList();
+                alldistinctcomplex = alldistinctcomplex.OrderBy(x => x.fullname).ToList();
                 var alldistinctcomplexlist = alldistinctcomplex.Where(x => x.IncludedInVersion()).ToList();
 
                 foreach (Ui5Complex type in alldistinctcomplexlist.Concat(allrealnamespaces))
@@ -181,18 +213,30 @@ namespace UI5TypeScriptGeneratorJsonGUI
 
                 List<Ui5Complex> results = AddToNamespaces(allrealnamespaces.Cast<Ui5Namespace>(), alldistinctcomplexlist);
 
-                foreach(Ui5Namespace result in results.OfType<Ui5Namespace>())
+                foreach (Ui5Namespace result in results.OfType<Ui5Namespace>())
                     SetParents(result);
+
+                CreateMetadata(results);
 
                 AppendCustomTypeDefinitions(results);
 
                 foreach (Ui5Namespace result in results.OfType<Ui5Namespace>())
                     SetParents(result);
 
+                CreateOverloads(results);
+
+                //MergeDuplicateNamespaces(results);
+
                 Log("Found " + alldistinctcomplexlist.Count() + " classes.");
                 Log("Creating " + results.Count + " files with declarations.");
 
-                CreateTypeDefinitionFiles(results);
+                SortHierarchyAlphabetically(results);
+
+                string[] createdfiles = CreateTypeDefinitionFiles(results);
+
+                Log("Doing postprocessing.");
+
+                PostProcess(createdfiles);
 
                 Log("Conversion successfully executed.");
 
@@ -201,20 +245,89 @@ namespace UI5TypeScriptGeneratorJsonGUI
             });
         }
 
-        private void MergeDuplicateNamespaces(List<Ui5Complex> result)
+        private void SortHierarchyAlphabetically(IEnumerable<Ui5Complex> results)
         {
-            var flatresults = result.Flatten(x => x.Content);
-            var ddic = flatresults.GroupBy(x => x.fullname)
-              .Where(g => g.Count() > 1).ToDictionary(x=>x.Key, y=>y.ToList());
+            foreach (Ui5Complex item in results)
+                SortHierarchyAlphabetically(item.Content);
 
+            results.OrderBy(x => x.name);
+        }
+
+        private void PostProcess(string[] createdfiles)
+        {
+            string[] requestedfiles = Regex.Matches(PostProcessing, "# file: (?<filename>.*)").Cast<Match>().Select(x => x.Groups["filename"].Value.Trim()).ToArray();
+
+            foreach(string file in requestedfiles)
+            {
+                Dictionary<string, string> commands = GetCommands(PostProcessing, file);
+                foreach(var command in commands)
+                {
+                    switch(command.Key)
+                    {
+                        case "ADD":
+                            string[] args = command.Value.Split(',');
+                            string newcontent;
+                            switch (args[0].Trim())
+                            {
+                                case ("@start"):
+                                    newcontent = args[1].Trim() + Environment.NewLine + File.ReadAllText(Path.Combine(OutputFolder, file));
+                                    break;
+                                default:
+                                    newcontent = File.ReadAllText(Path.Combine(OutputFolder, file)) + Environment.NewLine + args[1].Trim();
+                                    break;
+                            }
+                            File.WriteAllText(Path.Combine(OutputFolder, file), newcontent);
+                            break;
+                        case "REPLACE":
+                            args = command.Value.Split(',');
+                            string replacement = Regex.Replace(File.ReadAllText(Path.Combine(OutputFolder, file)), Regex.Escape(args[0].Trim()), args[1].Trim());
+                            File.WriteAllText(Path.Combine(OutputFolder, file), replacement);
+                            break;
+                        case "REMOVE":
+                            replacement = Regex.Replace(File.ReadAllText(Path.Combine(OutputFolder, file)), Regex.Escape(command.Value.Trim()), "");
+                            File.WriteAllText(Path.Combine(OutputFolder, file), replacement);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+
+        private Dictionary<string, string> GetCommands(string postProcessing, string file)
+        {
+            string content = Regex.Match(PostProcessing, @"# file: "+ Regex.Escape(file)+@"(?<content>.*?)(#|\z)", RegexOptions.Singleline).Groups["content"].Value.Trim();
+            return Regex.Matches(content, @"(?<command>\w*)\((?<arguments>.*?)\)").Cast<Match>().ToDictionary(x => x.Groups["command"].Value, y => y.Groups["arguments"].Value);
+        }
+
+        private void CreateOverloads(List<Ui5Complex> results)
+        {
+            var alltypes = results.Flatten(x => x.Content);
+            foreach (Ui5Complex c in alltypes)
+                c.CheckOverloads(alltypes);
+        }
+
+        private void MergeDuplicateNamespaces(List<Ui5Complex> results)
+        {
+            var allnamespaces = results.Flatten(x => x.Content).OfType<Ui5Namespace>().OrderBy(x=>x.name).ToList();
+            var allgroupednamespaces = allnamespaces.GroupBy(x => x.fullname, y => y).ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
+            var duplicates = allgroupednamespaces.Where(y => y.Value.Count() > 1).ToList();
+        }
+
+        private static void CreateMetadata(List<Ui5Complex> results)
+        {
+            var fullclasslist = results.Flatten(x => x.Content).OfType<Ui5Class>().ToList();
+            foreach (Ui5Class c in fullclasslist)
+                c.CreateMetadata();
+            var fullinterfacelist = results.Flatten(x => x.Content).OfType<Ui5Interface>();
+            foreach (Ui5Class c in fullclasslist)
+                c.ConnectMetadata(fullinterfacelist);
         }
 
         private void AppendCustomTypeDefinitions(List<Ui5Complex> results)
         {
-            foreach(var entry in globalValues.Typedefinitions)
+            foreach(var entry in globalValues.Typedefinitions.Where(x=>x.Value!=nameof(Ui5Enum)))
             {
-                if (entry.Value.Equals(nameof(Ui5Enum)) || entry.Value.Equals(nameof(Ui5Enum)))
-                    continue;
                 Ui5Complex toreplace = GetElementByPath(results, entry.Key);
 
                 if(toreplace==null)
@@ -347,7 +460,7 @@ namespace UI5TypeScriptGeneratorJsonGUI
             return result;
         }
 
-        private void CreateTypeDefinitionFiles(List<Ui5Complex> namespaces)
+        private string[] CreateTypeDefinitionFiles(List<Ui5Complex> namespaces)
         {
             Log("Staring conversion");
 
@@ -366,12 +479,16 @@ namespace UI5TypeScriptGeneratorJsonGUI
                         namespaces.Remove(namespc);
                     }
 
+            List<string> files = new List<string>();
             foreach(var entry in namespaces)
             {
                 string filename = entry.fullname + ".d.ts";
                 File.WriteAllText(Path.Combine(OutputFolder, filename), entry.SerializeTypescript());
                 Log("Put content to file " + filename);
+                files.Add(filename);
             }
+
+            return files.ToArray();
         }
 
         private List<JavaDocMain> GetSources()
@@ -454,9 +571,14 @@ namespace UI5TypeScriptGeneratorJsonGUI
             }
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        private void OpenOutputFolder_Click(object sender, RoutedEventArgs e)
         {
             Process.Start(OutputFolder);
+        }
+
+        private void ClearHistory_Click(object sender, RoutedEventArgs e)
+        {
+            LogEntries.Clear();
         }
     }
 }

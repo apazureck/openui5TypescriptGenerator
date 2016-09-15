@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UI5TypeScriptGeneratorJsonGUI"
         mc:Ignorable="d"
-        Title="MainWindow" Height="472.396" Width="937.13">
+        Title="MainWindow" Height="772.396" Width="937.13">
     <TabControl>
         <TabItem Header="Settings">
             <DockPanel ScrollViewer.VerticalScrollBarVisibility="Auto" LastChildFill="True">
@@ -17,28 +17,36 @@
                 <TextBox Text="{Binding Version}" DockPanel.Dock="Top"/>
                 <Label DockPanel.Dock="Top">Rest Endpoints for input files (One endpoint per line)</Label>
                 <TextBox DockPanel.Dock="Top" Text="{Binding RestEndpoints}" Height="100" TextWrapping="Wrap" AcceptsReturn="True" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                <TextBox DockPanel.Dock="Bottom" Text="{Binding PostProcessing}" Height="150" TextWrapping="Wrap" AcceptsReturn="True" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                <Label DockPanel.Dock="Bottom">Post Processing</Label>
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="30"/>
                         <RowDefinition/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="200"/>
-                        <ColumnDefinition Width="5" />
-                        <ColumnDefinition/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="5"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="5"/>
+                        <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Label DockPanel.Dock="Top">Type Replacements</Label>
                     <TextBox Grid.Row="1" Text="{Binding TypeReplacements}" ScrollViewer.VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" AcceptsReturn="True"/>
                     <GridSplitter Width="5" Grid.Column="1" HorizontalAlignment="Stretch" Grid.RowSpan="2"/>
                     <Label Grid.Column="2" DockPanel.Dock="Top" Content="Type Definitions"/>
                     <TextBox Grid.Column="2" Grid.Row="1" Text="{Binding TypeDefinitions}" ScrollViewer.VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" AcceptsReturn="True"/>
+                    <GridSplitter Width="5" Grid.Column="3" HorizontalAlignment="Stretch" Grid.RowSpan="2"/>
+                    <Label Grid.Column="4" DockPanel.Dock="Top" Content="Replace Methods (leave clear for skip)"/>
+                    <TextBox Grid.Column="4" Grid.Row="1" Text="{Binding SkipMethods}" ScrollViewer.VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" AcceptsReturn="True"/>
                 </Grid>
             </DockPanel>
         </TabItem>
         <TabItem Header="Output">
             <DockPanel LastChildFill="True">
                 <Button Click="Button_Click" DockPanel.Dock="Top">Get Type Definitions</Button>
-                <Button Click="Button_Click_1" DockPanel.Dock="Top">Go to ouptut folder</Button>
+                <Button Click="OpenOutputFolder_Click" DockPanel.Dock="Top">Go to ouptut folder</Button>
+                <Button Click="ClearHistory_Click" DockPanel.Dock="Top">Clear History</Button>
                 <TextBox ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" Text="{Binding Output}" DockPanel.Dock="Right" Margin="5" Width="500"/>
                 <ListView ItemsSource="{Binding LogEntries}" Margin="5" x:Name="log">
                 </ListView>

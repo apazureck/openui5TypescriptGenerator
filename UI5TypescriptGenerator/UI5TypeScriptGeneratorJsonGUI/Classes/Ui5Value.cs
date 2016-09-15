@@ -9,6 +9,15 @@ namespace UI5TypeScriptGeneratorJsonGUI
     {
         private string _type;
 
+        public Ui5Value() { }
+
+        public Ui5Value(Ui5Value source)
+        {
+            description = source.description;
+            if(source.type!=null)
+                type = source.type;
+        }
+
         public string type
         {
             get { return _type; }

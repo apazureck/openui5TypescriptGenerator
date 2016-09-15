@@ -140,5 +140,29 @@ sap.ui.suite.TaskCircleColor : string")]
                 this["TypeDefinitions"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("extends :\r\ngetMetadata :")]
+        public string SkipMethods {
+            get {
+                return ((string)(this["SkipMethods"]));
+            }
+            set {
+                this["SkipMethods"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string PostProcessing {
+            get {
+                return ((string)(this["PostProcessing"]));
+            }
+            set {
+                this["PostProcessing"] = value;
+            }
+        }
     }
 }
