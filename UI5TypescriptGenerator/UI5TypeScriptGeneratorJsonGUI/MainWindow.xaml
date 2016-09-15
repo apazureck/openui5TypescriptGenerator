@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UI5TypeScriptGeneratorJsonGUI"
         mc:Ignorable="d"
-        Title="MainWindow" Height="772.396" Width="937.13">
+        Title="MainWindow" Height="365.896" Width="937.13">
     <TabControl>
         <TabItem Header="Settings">
             <DockPanel ScrollViewer.VerticalScrollBarVisibility="Auto" LastChildFill="True">
@@ -15,9 +15,14 @@
                 <TextBox DockPanel.Dock="Top" Text="{Binding OutputFolder}"/>
                 <Label DockPanel.Dock="Top">Create for Version</Label>
                 <TextBox Text="{Binding Version}" DockPanel.Dock="Top"/>
+                <CheckBox DockPanel.Dock="Top" IsChecked="{Binding SuppressVisibility}">Suppress Visibility</CheckBox>
                 <Label DockPanel.Dock="Top">Rest Endpoints for input files (One endpoint per line)</Label>
-                <TextBox DockPanel.Dock="Top" Text="{Binding RestEndpoints}" Height="100" TextWrapping="Wrap" AcceptsReturn="True" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
-                <TextBox DockPanel.Dock="Bottom" Text="{Binding PostProcessing}" Height="150" TextWrapping="Wrap" AcceptsReturn="True" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                <TextBox Text="{Binding RestEndpoints}" Height="100" TextWrapping="Wrap" AcceptsReturn="True" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+            </DockPanel>
+        </TabItem>
+        <TabItem Header="Replacements">
+            <DockPanel LastChildFill="True">
+                <TextBox DockPanel.Dock="Bottom" Text="{Binding PostProcessing}" Height="250" TextWrapping="Wrap" AcceptsReturn="True" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
                 <Label DockPanel.Dock="Bottom">Post Processing</Label>
                 <Grid>
                     <Grid.RowDefinitions>

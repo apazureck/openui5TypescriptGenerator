@@ -25,13 +25,16 @@ namespace UI5TypeScriptGeneratorJsonGUI
             set { _type = globalValues.ConvertToValidTypeIfKnown(value); }
         }
 
-        public string SerializeTypescript(bool @explicit = false, bool createstatic = false, bool alloptional = false)
+        public string SerializeTypescript(bool @explicit = false, bool createstatic = false, bool alloptional = false, bool? alwayspublic = null, bool skipprotected = false)
         {
             StringBuilder sb = new StringBuilder();
+            if (alwayspublic == null)
+                alwayspublic = Properties.Settings.Default.SuppressVisibility;
             string safeproptype = Ui5Value.GetRelativeTypeDef(owner, propertytype);
             if (description != null)
                 sb.AppendComment(description + (defaultValue!=null? Environment.NewLine + "@default " + defaultValue : ""));
-            sb.Append(!@explicit ? visibility.GetDescription() : "");
+            // set visibility comment out if visibility is private
+            sb.Append(alwayspublic.Value ? "" : (visibility == Visibility.Resticted || visibility == Visibility.Private || skipprotected && visibility == Visibility.Protected ? "// " + visibility.ToString() + " " : visibility.GetDescription()));
             sb.Append(@explicit ? (@static && createstatic ? "static " : "var ") : "");
             sb.Append(base.name);
             sb.Append((alloptional ? "?" : "") + ": ");

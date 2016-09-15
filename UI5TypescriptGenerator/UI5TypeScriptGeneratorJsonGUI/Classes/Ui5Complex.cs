@@ -29,19 +29,19 @@ namespace UI5TypeScriptGeneratorJsonGUI
             }
         }
 
-        protected void AppendProperties(StringBuilder sb, bool @explicit = false, bool checkstatic = false, bool alloptional = false)
+        protected void AppendProperties(StringBuilder sb, bool @explicit = false, bool checkstatic = false, bool alloptional = false, bool skipprotected = false)
         {
             foreach (Ui5Property property in properties)
                 if (property.IncludedInVersion())
-                    sb.AppendLine(property.SerializeTypescript(@explicit, checkstatic, alloptional), 1);
+                    sb.AppendLine(property.SerializeTypescript(@explicit, checkstatic, alloptional, skipprotected), 1);
         }
 
-        protected void AppendMethods(StringBuilder sb, bool @explicit = false, bool createstatic = false)
+        protected void AppendMethods(StringBuilder sb, bool @explicit = false, bool createstatic = false, bool skipprotected = false)
         {
             foreach (Ui5Method method in methods)
                 if (method.IncludedInVersion())
                 {
-                    string[] overloads = method.SerializeTypescriptMethodStubs(@explicit, createstatic);
+                    string[] overloads = method.SerializeTypescriptMethodStubs(@explicit, createstatic, skipprotected);
                     if (overloads.Length>0)
                         sb.AppendLine(overloads.Aggregate((a, b) => a + ";" + Environment.NewLine + b) + ";", 1);
                 }

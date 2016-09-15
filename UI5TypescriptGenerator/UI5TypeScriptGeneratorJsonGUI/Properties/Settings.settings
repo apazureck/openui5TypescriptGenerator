@@ -170,5 +170,8 @@ REMOVE(import sapimport = sap;)
 # file: sap.ui.d.ts
 REMOVE(import sapimport = sap;)</Value>
     </Setting>
+    <Setting Name="SuppressVisibility" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

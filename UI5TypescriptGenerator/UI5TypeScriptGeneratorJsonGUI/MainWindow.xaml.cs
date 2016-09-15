@@ -252,6 +252,15 @@ namespace UI5TypeScriptGeneratorJsonGUI
             results.OrderBy(x => x.name);
         }
 
+        private bool suppressVisibility;
+
+        public bool SuppressVisibility
+        {
+            get { return Settings.SuppressVisibility; }
+            set { Settings.SuppressVisibility = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SuppressVisibility))); }
+        }
+
+
         private void PostProcess(string[] createdfiles)
         {
             string[] requestedfiles = Regex.Matches(PostProcessing, "# file: (?<filename>.*)").Cast<Match>().Select(x => x.Groups["filename"].Value.Trim()).ToArray();

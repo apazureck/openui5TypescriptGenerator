@@ -203,5 +203,17 @@ REMOVE(import sapimport = sap;)")]
                 this["PostProcessing"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SuppressVisibility {
+            get {
+                return ((bool)(this["SuppressVisibility"]));
+            }
+            set {
+                this["SuppressVisibility"] = value;
+            }
+        }
     }
 }

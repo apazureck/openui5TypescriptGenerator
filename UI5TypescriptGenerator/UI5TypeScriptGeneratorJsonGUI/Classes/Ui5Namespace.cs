@@ -37,9 +37,9 @@ namespace UI5TypeScriptGeneratorJsonGUI
                 sb.AppendLine(Content[i].SerializeTypescript(), 1);
             }
 
-            AppendProperties(sb, @explicit: true, checkstatic: false);
+            AppendProperties(sb, @explicit: true, checkstatic: false, skipprotected: true);
 
-            AppendMethods(sb, true, false);
+            AppendMethods(sb, @explicit: true, createstatic: false, skipprotected: true);
 
             additionaltypedefs.ForEach(x => sb.AppendLine(x, 1));
 
