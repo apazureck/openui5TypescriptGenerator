@@ -21,6 +21,10 @@ namespace UI5TypeScriptGeneratorJsonGUI
             }
         }
 
+        public string alias { get; set; }
+
+        public string author { get; set; }
+
         public string since { get; set; }
         public string description { get; set; }
         public bool IncludedInVersion()

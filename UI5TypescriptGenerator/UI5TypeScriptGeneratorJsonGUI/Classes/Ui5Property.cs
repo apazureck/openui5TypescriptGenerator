@@ -1,10 +1,7 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace UI5TypeScriptGeneratorJsonGUI
 {
@@ -25,7 +22,7 @@ namespace UI5TypeScriptGeneratorJsonGUI
             set { _type = globalValues.ConvertToValidTypeIfKnown(value); }
         }
 
-        public string SerializeTypescript(bool @explicit = false, bool createstatic = false, bool alloptional = false, bool? alwayspublic = null, bool skipprotected = false)
+        public virtual string SerializeTypescript(bool @explicit = false, bool createstatic = false, bool alloptional = false, bool? alwayspublic = null, bool skipprotected = false)
         {
             StringBuilder sb = new StringBuilder();
             if (alwayspublic == null)
@@ -34,7 +31,7 @@ namespace UI5TypeScriptGeneratorJsonGUI
             if (description != null)
                 sb.AppendComment(description + (defaultValue!=null? Environment.NewLine + "@default " + defaultValue : ""));
             // set visibility comment out if visibility is private
-            sb.Append(alwayspublic.Value ? "" : (visibility == Visibility.Resticted || visibility == Visibility.Private || skipprotected && visibility == Visibility.Protected ? "// " + visibility.ToString() + " " : visibility.GetDescription()));
+            sb.Append((globalValues.HideMember(visibility) ? "// " + visibility.ToString() + " " : globalValues.ShowVisibility(visibility)));
             sb.Append(@explicit ? (@static && createstatic ? "static " : "var ") : "");
             sb.Append(base.name);
             sb.Append((alloptional ? "?" : "") + ": ");
@@ -57,7 +54,7 @@ namespace UI5TypeScriptGeneratorJsonGUI
             //}
         }
 
-        public string CreateDescription()
+        public virtual string CreateDescription()
         {
             StringBuilder csb = new StringBuilder();
             csb.AppendLine(description);

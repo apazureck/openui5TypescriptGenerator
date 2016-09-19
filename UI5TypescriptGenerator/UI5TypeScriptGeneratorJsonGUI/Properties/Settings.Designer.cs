@@ -139,13 +139,9 @@ sap.ui.core.BusyIndicatorUtils : Ui5Enum
 sap.ui.core.Collision : string
 sap.ui.core.CSSColor : string
 sap.ui.core.CSSSize : string
-sap.ui.core.delegate : Ui5Enum
 sap.ui.core.Dock : string
 sap.ui.core.ID : string
-sap.ui.core.message : Ui5Enum
-sap.ui.core.mvc : Ui5Enum
 sap.ui.core.Popup.Dock : string
-sap.ui.core.theming : Ui5Enum
 sap.ui.core.URI : string
 sap.ui.core.ws.ReadyState : Ui5Enum
 sap.ui.layout.BlockBackgroundType : Ui5Enum
@@ -173,7 +169,7 @@ sap.uxap.BlockBaseColumnLayout : string|number")]
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("extend :\r\ngetMetadata :")]
+        [global::System.Configuration.DefaultSettingValueAttribute("getMetadata :")]
         public string SkipMethods {
             get {
                 return ((string)(this["SkipMethods"]));
@@ -214,6 +210,90 @@ REMOVE(import sapimport = sap;)")]
             }
             set {
                 this["SuppressVisibility"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool Wrapping {
+            get {
+                return ((bool)(this["Wrapping"]));
+            }
+            set {
+                this["Wrapping"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool PublicPrivate {
+            get {
+                return ((bool)(this["PublicPrivate"]));
+            }
+            set {
+                this["PublicPrivate"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool PublicProtected {
+            get {
+                return ((bool)(this["PublicProtected"]));
+            }
+            set {
+                this["PublicProtected"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool RemovePrivate {
+            get {
+                return ((bool)(this["RemovePrivate"]));
+            }
+            set {
+                this["RemovePrivate"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool RemoveProtected {
+            get {
+                return ((bool)(this["RemoveProtected"]));
+            }
+            set {
+                this["RemoveProtected"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool PublicRestricted {
+            get {
+                return ((bool)(this["PublicRestricted"]));
+            }
+            set {
+                this["PublicRestricted"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool RemoveRestricted {
+            get {
+                return ((bool)(this["RemoveRestricted"]));
+            }
+            set {
+                this["RemoveRestricted"] = value;
             }
         }
     }

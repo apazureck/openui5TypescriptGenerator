@@ -99,6 +99,9 @@ namespace UI5TypeScriptGeneratorJsonGUI
             get; set;
         }
 
+        [JsonProperty("abstract")]
+        public bool @abstract { get; set; }
+
         override protected string DebuggerDisplay => "Ui5Class: " + name + " (" + @namespace + "." + name + ")";
     }
 }

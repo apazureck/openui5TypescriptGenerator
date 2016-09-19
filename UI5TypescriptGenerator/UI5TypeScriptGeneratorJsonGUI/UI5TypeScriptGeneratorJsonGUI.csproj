@@ -86,6 +86,7 @@
     </ApplicationDefinition>
     <Compile Include="ClassEqualityComparer.cs" />
     <Compile Include="Classes\Ui5Deprecated.cs" />
+    <Compile Include="Classes\Ui5MethodEqualityComparer.cs" />
     <Compile Include="Deprecated.cs" />
     <Compile Include="EnumExtensions.cs" />
     <Compile Include="globalValues.cs" />

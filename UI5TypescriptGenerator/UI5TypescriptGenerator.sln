@@ -5,6 +5,17 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UI5TypeScriptGeneratorJsonGUI", "UI5TypeScriptGeneratorJsonGUI\UI5TypeScriptGeneratorJsonGUI.csproj", "{BA621649-7638-4103-8EDE-C9606784299E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "typing", "typing", "{D35B5E0C-49D1-436D-A2F8-7B93CFFD671B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ui5", "ui5", "{DA4E9636-B9C1-4989-91AC-1149B55632FF}"
+	ProjectSection(SolutionItems) = preProject
+		..\typings\ui5\jQuery.d.ts = ..\typings\ui5\jQuery.d.ts
+		..\typings\ui5\sap.m.d.ts = ..\typings\ui5\sap.m.d.ts
+		..\typings\ui5\sap.tnt.d.ts = ..\typings\ui5\sap.tnt.d.ts
+		..\typings\ui5\sap.ui.d.ts = ..\typings\ui5\sap.ui.d.ts
+		..\typings\ui5\sap.uxap.d.ts = ..\typings\ui5\sap.uxap.d.ts
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +29,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DA4E9636-B9C1-4989-91AC-1149B55632FF} = {D35B5E0C-49D1-436D-A2F8-7B93CFFD671B}
 	EndGlobalSection
 EndGlobal

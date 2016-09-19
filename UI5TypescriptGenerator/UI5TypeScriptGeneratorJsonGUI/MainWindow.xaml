@@ -15,9 +15,18 @@
                 <TextBox DockPanel.Dock="Top" Text="{Binding OutputFolder}"/>
                 <Label DockPanel.Dock="Top">Create for Version</Label>
                 <TextBox Text="{Binding Version}" DockPanel.Dock="Top"/>
-                <CheckBox DockPanel.Dock="Top" IsChecked="{Binding SuppressVisibility}">Suppress Visibility</CheckBox>
+                <CheckBox DockPanel.Dock="Top" IsChecked="{Binding RemovePrivate}">Remove Private members from declaration</CheckBox>
+                <CheckBox DockPanel.Dock="Top" IsChecked="{Binding RemoveProtected}">Remove Protected members from declaration</CheckBox>
+                <CheckBox DockPanel.Dock="Top" IsChecked="{Binding RemoveRestricted}">Remove Restricted members from declaration</CheckBox>
+                <CheckBox DockPanel.Dock="Top" IsChecked="{Binding PublicPrivate}">Declare Private members as public</CheckBox>
+                <CheckBox DockPanel.Dock="Top" IsChecked="{Binding PublicProtected}">Declare Protected members as public</CheckBox>
+                <CheckBox DockPanel.Dock="Top" IsChecked="{Binding PublicRestricted}">Declare Restricted as public</CheckBox>
+                <CheckBox DockPanel.Dock="Top" IsChecked="{Binding Wrapping}" IsEnabled="False">
+                    <CheckBox.Content>Create wrapping classes</CheckBox.Content>
+                    <CheckBox.ToolTip>Creates wrapping classes instead of typedefinitions to provide properties instead of getters and setters. May decrease speed at runtime.</CheckBox.ToolTip>
+                </CheckBox>
                 <Label DockPanel.Dock="Top">Rest Endpoints for input files (One endpoint per line)</Label>
-                <TextBox Text="{Binding RestEndpoints}" Height="100" TextWrapping="Wrap" AcceptsReturn="True" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                <TextBox Text="{Binding RestEndpoints}" TextWrapping="Wrap" AcceptsReturn="True" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
             </DockPanel>
         </TabItem>
         <TabItem Header="Replacements">

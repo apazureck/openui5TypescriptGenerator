@@ -130,13 +130,9 @@ sap.ui.core.BusyIndicatorUtils : Ui5Enum
 sap.ui.core.Collision : string
 sap.ui.core.CSSColor : string
 sap.ui.core.CSSSize : string
-sap.ui.core.delegate : Ui5Enum
 sap.ui.core.Dock : string
 sap.ui.core.ID : string
-sap.ui.core.message : Ui5Enum
-sap.ui.core.mvc : Ui5Enum
 sap.ui.core.Popup.Dock : string
-sap.ui.core.theming : Ui5Enum
 sap.ui.core.URI : string
 sap.ui.core.ws.ReadyState : Ui5Enum
 sap.ui.layout.BlockBackgroundType : Ui5Enum
@@ -155,8 +151,7 @@ sap.ui.suite.TaskCircleColor : string
 sap.uxap.BlockBaseColumnLayout : string|number</Value>
     </Setting>
     <Setting Name="SkipMethods" Type="System.String" Scope="User">
-      <Value Profile="(Default)">extend :
-getMetadata :</Value>
+      <Value Profile="(Default)">getMetadata :</Value>
     </Setting>
     <Setting Name="PostProcessing" Type="System.String" Scope="User">
       <Value Profile="(Default)"># file: jQuery.d.ts
@@ -173,6 +168,27 @@ REMOVE(import sapimport = sap;)</Value>
     </Setting>
     <Setting Name="SuppressVisibility" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="Wrapping" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="PublicPrivate" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="PublicProtected" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="RemovePrivate" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="RemoveProtected" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="PublicRestricted" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="RemoveRestricted" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
 </SettingsFile>

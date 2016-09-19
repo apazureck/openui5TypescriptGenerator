@@ -92,7 +92,7 @@ namespace UI5TypeScriptGeneratorJsonGUI
                 overload.description += Environment.NewLine + "@note Overload from base type " + x.owner.fullname;
                 return overload;
             }));
-            requestor.methods = requestor.methods.OrderBy(x => x.name).ToList();
+            requestor.methods = requestor.methods.Distinct(new Ui5MethodEqualityComparer()).OrderBy(x => x.name).ToList();
             requestor.Overloaded = true;
         }
 

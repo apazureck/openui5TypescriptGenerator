@@ -47,6 +47,42 @@ namespace UI5TypeScriptGeneratorJsonGUI
             set { Settings.PostProcessing = value; Settings.Save(); PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PostProcessing))); }
         }
 
+        public bool RemovePrivate
+        {
+            get { return Settings.RemovePrivate; }
+            set { Settings.RemovePrivate = value; Settings.Save(); PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RemovePrivate))); }
+        }
+
+        public bool RemoveProtected
+        {
+            get { return Settings.RemoveProtected; }
+            set { Settings.RemoveProtected = value; Settings.Save(); PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RemoveProtected))); }
+        }
+
+        public bool RemoveRestricted
+        {
+            get { return Settings.RemoveRestricted; }
+            set { Settings.RemoveRestricted = value; Settings.Save(); PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RemoveRestricted))); }
+        }
+
+        public bool PublicPrivate
+        {
+            get { return Settings.PublicPrivate; }
+            set { Settings.PublicPrivate = value; Settings.Save(); PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PublicPrivate))); }
+        }
+
+        public bool PublicProtected
+        {
+            get { return Settings.PublicProtected; }
+            set { Settings.PublicProtected = value; Settings.Save(); PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PublicProtected))); }
+        }
+
+        public bool PublicRestricted
+        {
+            get { return Settings.PublicRestricted; }
+            set { Settings.PublicRestricted = value; Settings.Save(); PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PublicRestricted))); }
+        }
+
         protected override void OnClosing(CancelEventArgs e)
         {
             base.OnClosing(e);
@@ -170,6 +206,8 @@ namespace UI5TypeScriptGeneratorJsonGUI
                     return "UI5TypeScriptGeneratorJsonGUI.Ui5Interface, UI5TypeScriptGeneratorJsonGUI";
                 case "enum":
                     return "UI5TypeScriptGeneratorJsonGUI.Ui5Enum, UI5TypeScriptGeneratorJsonGUI";
+                case "event":
+                    return "UI5TypeScriptGeneratorJsonGui.Ui5Event, Ui5TypeScriptGeneratorJsonGUI";
                 default:
                     return "UI5TypeScriptGeneratorJsonGUI.Ui5Symbol, UI5TypeScriptGeneratorJsonGUI";
             }

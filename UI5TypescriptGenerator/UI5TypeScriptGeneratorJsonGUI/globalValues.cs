@@ -66,5 +66,43 @@ namespace UI5TypeScriptGeneratorJsonGUI
         {
             return Defaultvalues.ContainsKey(type.Replace("[]", ""));
         }
+
+        public static string ShowVisibility(Visibility vis)
+        {
+            switch (vis)
+            {
+                case Visibility.Public:
+                    return vis.GetDescription();
+                case Visibility.Protected:
+                    return Properties.Settings.Default.PublicProtected ? "" : vis.GetDescription();
+                case Visibility.Private:
+                    return Properties.Settings.Default.PublicPrivate ? "" : vis.GetDescription();
+                case Visibility.Resticted:
+                    return Properties.Settings.Default.PublicRestricted ? "" : vis.GetDescription();
+                case Visibility.Hidden:
+                    return "";
+                default:
+                    return "";
+            }
+        }
+
+        public static bool HideMember(Visibility vis)
+        {
+            switch (vis)
+            {
+                case Visibility.Public:
+                    return false;
+                case Visibility.Protected:
+                    return Properties.Settings.Default.RemoveProtected;
+                case Visibility.Private:
+                    return Properties.Settings.Default.RemovePrivate;
+                case Visibility.Resticted:
+                    return Properties.Settings.Default.RemoveRestricted;
+                case Visibility.Hidden:
+                    return false;
+                default:
+                    return true;
+            }
+        }
     }
 }

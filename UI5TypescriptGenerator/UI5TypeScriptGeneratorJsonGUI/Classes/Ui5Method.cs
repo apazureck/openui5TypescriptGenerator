@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace UI5TypeScriptGeneratorJsonGUI
 {
+    [DebuggerDisplay("{DebuggerDisplay,ng}")]
     public class Ui5Method : Ui5Member
     {
         public Ui5Method() { }
@@ -30,23 +32,17 @@ namespace UI5TypeScriptGeneratorJsonGUI
 
             string[] stubs;
 
-            var optionalnotoptionalgroups = parameters.GroupBy(x => x.optional, y => y).ToDictionary(x=>x.Key, y=>y.ToList());
-            if (optionalnotoptionalgroups.ContainsKey(false))
-            {
-                if (optionalnotoptionalgroups.ContainsKey(true))
-                    stubs = new string[] { CreateStub(optionalnotoptionalgroups[false].Concat(optionalnotoptionalgroups[true]), @explicit, createstatic, skipprotected) };
-                else
-                    stubs = new string[] { CreateStub(optionalnotoptionalgroups[false], @explicit, createstatic, skipprotected) };
-            }
-            else if (optionalnotoptionalgroups.ContainsKey(true))
-                stubs = new string[] { CreateStub(optionalnotoptionalgroups[true], @explicit, createstatic, skipprotected) };
-            else
-                stubs = new string[] { CreateStub(parameters, @explicit, createstatic, skipprotected) };
+            int lastmandatory = parameters.IndexOf(parameters.LastOrDefault(x => !x.optional));
 
+            if (lastmandatory > -1)
+                parameters.Take(lastmandatory).ToList().ForEach(x => x.optional = false);
+
+            stubs = new string[] { CreateStub(parameters, @explicit, createstatic, skipprotected) };
+                
             return stubs.Where(x => x != null).ToArray();
         }
 
-        public string[] GetMethodDefinitions(bool @explicit = false, bool createstatic = false)
+        public string[] GetMethodDefinitions(bool @explicit = false, bool createstatic = false, bool skipprotected = false)
         {
             string lname = name;
             if (globalValues.SkipMethods.ContainsKey(name))
@@ -56,18 +52,12 @@ namespace UI5TypeScriptGeneratorJsonGUI
 
             string[] stubs;
 
-            var optionalnotoptionalgroups = parameters.GroupBy(x => x.optional, y => y).ToDictionary(x => x.Key, y => y.ToList());
-            if (optionalnotoptionalgroups.ContainsKey(false))
-            {
-                if (optionalnotoptionalgroups.ContainsKey(true))
-                    stubs = new string[] { CreateDefinition(optionalnotoptionalgroups[false].Concat(optionalnotoptionalgroups[true]), lname, @explicit, createstatic) };
-                else
-                    stubs = new string[] { CreateDefinition(optionalnotoptionalgroups[false], lname, @explicit, createstatic) };
-            }
-            else if (optionalnotoptionalgroups.ContainsKey(true))
-                stubs = new string[] { CreateDefinition(optionalnotoptionalgroups[true], lname, @explicit, createstatic) };
-            else
-                stubs = new string[] { CreateDefinition(parameters, lname, @explicit, createstatic) };
+            int lastmandatory = parameters.IndexOf(parameters.LastOrDefault(x => !x.optional));
+
+            if (lastmandatory > -1)
+                parameters.Take(lastmandatory).ToList().ForEach(x => x.optional = false);
+
+            stubs = new string[] { CreateStub(parameters, @explicit, createstatic, skipprotected) };
 
             return stubs.Where(x => x != null).ToArray();
         }
@@ -88,17 +78,17 @@ namespace UI5TypeScriptGeneratorJsonGUI
                 return null;
             StringBuilder sb = new StringBuilder();
             sb.AppendComment(CreateDescription(pars));
-            sb.Append(CreateDefinition(pars, lname, @explicit, createstatic, skipprotected));
+            sb.Append(CreateDefinition(pars, lname, @explicit, createstatic, null, skipprotected));
             return sb.ToString();
         }
 
         public string CreateDefinition(IEnumerable<Ui5Parameter> pars, string name, bool @explicit, bool createstatic, bool? alwayspublic = null, bool skipprotected = false)
         {
             StringBuilder sb = new StringBuilder();
-            if (alwayspublic == null)
-                alwayspublic = Properties.Settings.Default.SuppressVisibility;
+            //if (alwayspublic == null)
+            //    alwayspublic = Properties.Settings.Default.SuppressVisibility;
             // set visibility comment out if visibility is private
-            sb.Append(alwayspublic.Value ? "" : (visibility == Visibility.Private || visibility == Visibility.Resticted || skipprotected && visibility == Visibility.Protected ? "// " + visibility.ToString() + " " : visibility.GetDescription()));
+            sb.Append((globalValues.HideMember(visibility) ? "// " + visibility.ToString() + " " : globalValues.ShowVisibility(visibility)));
             // create function name
             sb.Append(@explicit ? (@static && createstatic ? "static function " : "function ") : (createstatic && @static ? "static " : ""));
             sb.Append(name + "(");
@@ -119,12 +109,14 @@ namespace UI5TypeScriptGeneratorJsonGUI
             StringBuilder csb = new StringBuilder();
             csb.AppendLine(description);
             foreach (Ui5Parameter par in pars)
-                csb.AppendLine("@param " + par.name + " " + par.description);
+                csb.AppendLine("@param " + par.name + " " + par.description + (par.optional ? "(optional)" : ""));
             if (deprecated != null)
                 csb.AppendLine("@deprecated " + (since!=null ? "since version " + since + ":" : "") + deprecated.text);
             if (returnValue != null)
                 csb.AppendLine("@return " + returnValue.description);
             return csb.ToString();
         }
+
+        private string DebuggerDisplay => CreateDefinition(parameters, name, true, false);
     }
 }
