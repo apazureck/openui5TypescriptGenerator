@@ -1,5 +1,5 @@
 ﻿sap.ui.getCore().attachInit(function () {
-    sap.ui.xmlview("", {
+    sap.ui.xmlview(undefined, {
         viewName: "sap.ui.demo.wt.view.App"
-    }).placeAt("content");
+    }).placeAt("content", undefined);
 });

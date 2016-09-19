@@ -66,6 +66,11 @@
                 </ListView>
             </DockPanel>
         </TabItem>
+        <TabItem Header="DebugInfo">
+            <DockPanel LastChildFill="True">
+                <TextBox Text="{Binding EventProperties}" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+            </DockPanel>
+        </TabItem>
     </TabControl>
     
 </Window>

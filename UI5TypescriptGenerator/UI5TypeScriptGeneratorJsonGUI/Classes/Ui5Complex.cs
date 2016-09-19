@@ -31,9 +31,10 @@ namespace UI5TypeScriptGeneratorJsonGUI
 
         protected void AppendProperties(StringBuilder sb, bool @explicit = false, bool checkstatic = false, bool alloptional = false, bool skipprotected = false)
         {
-            foreach (Ui5Property property in properties)
-                if (property.IncludedInVersion())
-                    sb.AppendLine(property.SerializeTypescript(@explicit, checkstatic, alloptional, skipprotected), 1);
+            if(properties!=null)
+                foreach (Ui5Property property in properties)
+                    if (property.IncludedInVersion())
+                        sb.AppendLine(property.SerializeTypescript(@explicit, checkstatic, alloptional, skipprotected), 1);
         }
 
         protected void AppendMethods(StringBuilder sb, bool @explicit = false, bool createstatic = false, bool skipprotected = false)

@@ -11,6 +11,17 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Step 4 - XML Views", "Step 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Step 5 - Controllers", "Step 5 - Controllers\Step 5 - Controllers.csproj", "{79A28FCF-5758-44FA-9425-27DB15DA9BE1}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "typings", "typings", "{379726CF-D305-455B-8D7F-E1C92EA6A10B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ui5", "ui5", "{7407F871-63F7-4602-8D04-2FABF61D189C}"
+	ProjectSection(SolutionItems) = preProject
+		..\typings\ui5\jQuery.d.ts = ..\typings\ui5\jQuery.d.ts
+		..\typings\ui5\sap.m.d.ts = ..\typings\ui5\sap.m.d.ts
+		..\typings\ui5\sap.tnt.d.ts = ..\typings\ui5\sap.tnt.d.ts
+		..\typings\ui5\sap.ui.d.ts = ..\typings\ui5\sap.ui.d.ts
+		..\typings\ui5\sap.uxap.d.ts = ..\typings\ui5\sap.uxap.d.ts
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +47,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7407F871-63F7-4602-8D04-2FABF61D189C} = {379726CF-D305-455B-8D7F-E1C92EA6A10B}
 	EndGlobalSection
 EndGlobal

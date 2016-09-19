@@ -289,6 +289,56 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|PositionContainerMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 				/**
 				 * Gets current value of property <code>bottom</code>.
@@ -1007,6 +1057,58 @@ declare namespace sap.ui {
 			 * <li><code>objectBindings : <i>object</i></code>  a map of binding paths keyed by the corresponding model name.
 			 *   Each entry with key <i>k</i> in this object has the same effect as a call <code>this.bindObject(objectBindings[k], k);</code></li>
 			 * </ul>
+			 * @param sId id for the new managed object; generated automatically if no non-empty id is given
+			 *      Note: this can be omitted, no matter whether <code>mSettings</code> will be given or not!(optional)
+			 * @param mSettings Optional map/JSON-object with initial property values, aggregated objects etc. for the new object(optional)
+			 * @param oScope Scope object for resolving string based type and formatter references in bindings.
+			 *      When a scope object is given, <code>mSettings</code> cannot be omitted, at least <code>null</code> or an empty object literal must be given.(optional)
+			 */
+			constructor(sId?: string, mSettings?: any, oScope?: any);
+			/**
+			 * Constructs and initializes a managed object with the given <code>sId</code> and settings.
+			 * 
+			 * If the optional <code>mSettings</code> are given, they must be a simple object
+			 * that defines values for properties, aggregations, associations or events keyed by their name.
+			 * 
+			 * <b>Valid Names and Value Ranges:</b>
+			 * 
+			 * The property (key) names supported in the object literal are exactly the (case sensitive)
+			 * names documented in the JSDoc for the properties, aggregations, associations and events
+			 * of the current class and its base classes. Note that for 0..n aggregations and associations this
+			 * name usually is the plural name, whereas it is the singular name in case of 0..1 relations.
+			 * 
+			 * If a key name is ambiguous for a specific managed object class (e.g. a property has the same
+			 * name as an event), then this method prefers property, aggregation, association and
+			 * event in that order. To resolve such ambiguities, the keys can be prefixed with
+			 * <code>aggregation:</code>, <code>association:</code> or <code>event:</code>
+			 * (such keys containing a colon (':') must be quoted to be valid Javascript).
+			 * 
+			 * The possible values for a setting depend on its kind:
+			 * <ul>
+			 * <li>for simple properties, the value has to match the documented type of the property (no type conversion occurs)
+			 * <li>for 0..1 aggregations, the value has to be an instance of the aggregated type
+			 * <li>for 0..n aggregations, the value has to be an array of instances of the aggregated type or a single instance
+			 * <li>for 0..1 associations, an instance of the associated type or an id (string) is accepted
+			 * <li>for 0..n associations, an array of instances of the associated type or of Ids is accepted
+			 * <li>for events either a function (event handler) is accepted or an array of length 2
+			 *     where the first element is a function and the 2nd element is an object to invoke the method on.
+			 * </ul>
+			 * 
+			 * Each subclass should document the name and type of its supported settings in its constructor documentation.
+			 * 
+			 * Besides the settings documented below, ManagedObject itself supports the following special settings:
+			 * <ul>
+			 * <li><code>id : <i>sap.ui.core.ID</i></code> an ID for the new instance. Some subclasses (Element, Component) require the id
+			 *   to be unique in a specific scope (e.g. an Element Id must be unique across all Elements, a Component id must
+			 *   be unique across all Components).
+			 * <li><code>models : <i>object</i></code> a map of {@link sap.ui.model.Model} instances keyed by their model name (alias).
+			 *   Each entry with key <i>k</i> in this object has the same effect as a call <code>this.setModel(models[k], k);</code>.</li>
+			 * <li><code>bindingContexts : <i>object</i></code> a map of {@link sap.ui.model.Context} instances keyed by their model name.
+			 *   Each entry with key <i>k</i> in this object has the same effect as a call <code>this.setBindingContext(bindingContexts[k], k);</code></li>
+			 * <li><code>objectBindings : <i>object</i></code>  a map of binding paths keyed by the corresponding model name.
+			 *   Each entry with key <i>k</i> in this object has the same effect as a call <code>this.bindObject(objectBindings[k], k);</code></li>
+			 * </ul>
+			 * @note Any overloads to support not documented metadata
 			 * @param sId id for the new managed object; generated automatically if no non-empty id is given
 			 *      Note: this can be omitted, no matter whether <code>mSettings</code> will be given or not!(optional)
 			 * @param mSettings Optional map/JSON-object with initial property values, aggregated objects etc. for the new object(optional)
@@ -2251,6 +2353,9 @@ declare namespace sap.ui {
 			 */
 			reset();
 		}
+	
+		interface ManagedObjectMetadata {
+		}
 	}
 
 	/**
@@ -3271,6 +3376,13 @@ declare namespace sap.ui {
 				 */
 				constructor(sId?: string, mSettings?: any);
 				/**
+				 * Constructor for a new mvc/HTMLView.
+				 * @note Any overloads to support not documented metadata
+				 * @param sId id for the new control, generated automatically if no id is given(optional)
+				 * @param mSettings initial settings for the new control(optional)
+				 */
+				constructor(sId?: string, mSettings?: any);
+				/**
 				 * Flag for feature detection of asynchronous loading/rendering
 				 */
 				asyncSupport: any;
@@ -3285,11 +3397,42 @@ declare namespace sap.ui {
 				 * @return Created class / constructor function
 				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.mvc.View with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Control.extend}.
+				 * @note Overload from base type sap.ui.core.mvc.View
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|ViewMetadata, FNMetaImpl?: any): any;
 			}
 		
 			class JSONView extends View {
 				/**
 				 * Constructor for a new mvc/JSONView.
+				 * @param sId id for the new control, generated automatically if no id is given(optional)
+				 * @param mSettings initial settings for the new control(optional)
+				 */
+				constructor(sId?: string, mSettings?: any);
+				/**
+				 * Constructor for a new mvc/JSONView.
+				 * @note Any overloads to support not documented metadata
 				 * @param sId id for the new control, generated automatically if no id is given(optional)
 				 * @param mSettings initial settings for the new control(optional)
 				 */
@@ -3309,11 +3452,42 @@ declare namespace sap.ui {
 				 * @return Created class / constructor function
 				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.mvc.View with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Control.extend}.
+				 * @note Overload from base type sap.ui.core.mvc.View
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|ViewMetadata, FNMetaImpl?: any): any;
 			}
 		
 			class JSView extends View {
 				/**
 				 * Constructor for a new mvc/JSView.
+				 * @param sId id for the new control, generated automatically if no id is given(optional)
+				 * @param mSettings initial settings for the new control(optional)
+				 */
+				constructor(sId?: string, mSettings?: any);
+				/**
+				 * Constructor for a new mvc/JSView.
+				 * @note Any overloads to support not documented metadata
 				 * @param sId id for the new control, generated automatically if no id is given(optional)
 				 * @param mSettings initial settings for the new control(optional)
 				 */
@@ -3342,6 +3516,30 @@ declare namespace sap.ui {
 				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.mvc.View with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Control.extend}.
+				 * @note Overload from base type sap.ui.core.mvc.View
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|ViewMetadata, FNMetaImpl?: any): any;
+				/**
 				 * A method to be implemented by JSViews, returning the flag whether to prefix
 				 * the IDs of controls automatically or not if the controls are created inside
 				 * the {@link sap.ui.core.mvc.JSView#createContent} function. By default this
@@ -3362,6 +3560,13 @@ declare namespace sap.ui {
 				 */
 				constructor(sId?: string, mSettings?: any);
 				/**
+				 * Constructor for a new mvc/TemplateView.
+				 * @note Any overloads to support not documented metadata
+				 * @param sId id for the new control, generated automatically if no id is given(optional)
+				 * @param mSettings initial settings for the new control(optional)
+				 */
+				constructor(sId?: string, mSettings?: any);
+				/**
 				 * Creates a new subclass of class sap.ui.core.mvc.TemplateView with name <code>sClassName</code>
 				 * and enriches it with the information contained in <code>oClassInfo</code>.
 				 * 
@@ -3372,6 +3577,30 @@ declare namespace sap.ui {
 				 * @return Created class / constructor function
 				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.mvc.View with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Control.extend}.
+				 * @note Overload from base type sap.ui.core.mvc.View
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|ViewMetadata, FNMetaImpl?: any): any;
 			}
 		
 			class View extends sap.ui.core.Control {
@@ -3589,7 +3818,69 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|ViewMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 				/**
 				 * Fires event <code>afterInit</code> to attached listeners.
 				 * @param mArguments The arguments to pass along with the event(optional)
@@ -3865,6 +4156,21 @@ declare namespace sap.ui {
 				 */
 				constructor(sId?: string, mSettings?: any);
 				/**
+				 * Constructor for a new mvc/XMLView.
+				 * 
+				 * 
+				 * Accepts an object literal <code>mSettings</code> that defines initial
+				 * property values, aggregated and associated objects as well as event handlers.
+				 * See {@link sap.ui.base.ManagedObject#constructor} for a general description of the syntax of the settings object.
+				 * 
+				 * This class does not have its own settings, but all settings applicable to the base type
+				 * {@link sap.ui.core.mvc.View#constructor sap.ui.core.mvc.View} can be used.
+				 * @note Any overloads to support not documented metadata
+				 * @param sId id for the new control, generated automatically if no id is given(optional)
+				 * @param mSettings initial settings for the new control(optional)
+				 */
+				constructor(sId?: string, mSettings?: any);
+				/**
 				 * Flag for feature detection of asynchronous loading/rendering
 				 */
 				asyncSupport: any;
@@ -3879,6 +4185,30 @@ declare namespace sap.ui {
 				 * @return Created class / constructor function
 				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.mvc.View with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Control.extend}.
+				 * @note Overload from base type sap.ui.core.mvc.View
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|ViewMetadata, FNMetaImpl?: any): any;
 				/**
 				 * Register a preprocessor for all views of a specific type.
 				 * 
@@ -4333,6 +4663,18 @@ declare namespace sap.ui {
 				 */
 				constructor(sId?: string, mSettings?: any);
 				/**
+				 * Constructor for a new Export.
+				 * 
+				 * 
+				 * Accepts an object literal <code>mSettings</code> that defines initial
+				 * property values, aggregated and associated objects as well as event handlers.
+				 * See {@link sap.ui.base.ManagedObject#constructor} for a general description of the syntax of the settings object.
+				 * @note Any overloads to support not documented metadata
+				 * @param sId id for the new control, generated automatically if no id is given(optional)
+				 * @param mSettings initial settings for the new control(optional)
+				 */
+				constructor(sId?: string, mSettings?: any);
+				/**
 				 * Adds some column to the aggregation <code>columns</code>.
 				 * @param oColumn the column to add; if empty, nothing is inserted
 				 * @return Reference to <code>this</code> in order to allow method chaining
@@ -4388,6 +4730,18 @@ declare namespace sap.ui {
 				 * @return Created class / constructor function
 				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 				/**
 				 * Generates the file content and returns a Promise
 				 * with the instance as context (this).<br>
@@ -4547,6 +4901,56 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|ExportCellMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 				/**
 				 * Gets current value of property <code>content</code>.
@@ -4606,6 +5010,56 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|ExportColumnMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 				/**
 				 * Gets current value of property <code>name</code>.
@@ -4647,6 +5101,18 @@ declare namespace sap.ui {
 				 * Accepts an object literal <code>mSettings</code> that defines initial
 				 * property values, aggregated and associated objects as well as event handlers.
 				 * See {@link sap.ui.base.ManagedObject#constructor} for a general description of the syntax of the settings object.
+				 * @param sId id for the new control, generated automatically if no id is given(optional)
+				 * @param mSettings initial settings for the new control(optional)
+				 */
+				constructor(sId?: string, mSettings?: any);
+				/**
+				 * Constructor for a new ExportRow.
+				 * 
+				 * 
+				 * Accepts an object literal <code>mSettings</code> that defines initial
+				 * property values, aggregated and associated objects as well as event handlers.
+				 * See {@link sap.ui.base.ManagedObject#constructor} for a general description of the syntax of the settings object.
+				 * @note Any overloads to support not documented metadata
 				 * @param sId id for the new control, generated automatically if no id is given(optional)
 				 * @param mSettings initial settings for the new control(optional)
 				 */
@@ -4762,6 +5228,56 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|ExportTypeMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 				/**
 				 * Generates the file content.<br>
@@ -4871,7 +5387,69 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|ExportTypeCSVMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.util.ExportType with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.base.ManagedObject.extend}.
+				 * @note Overload from base type sap.ui.core.util.ExportType
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|ExportTypeMetadata, FNMetaImpl?: any): any;
 				/**
 				 * Generates the file content.
 				 * @return content
@@ -4989,6 +5567,56 @@ declare namespace sap.ui {
 				 * @param oClassInfo Object literal with information about the class(optional)
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|MockServerMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
 				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 				/**
@@ -5244,14 +5872,14 @@ declare namespace sap.ui {
 				content?: string;
 			}
 		
-			interface ExportColumnMetadata {
+			interface ExportColumnMetadata extends sap.ui.base.ManagedObjectMetadata {
 				/**
 				 * Column name.
 				 */
 				name?: string;
 			}
 		
-			interface ExportTypeMetadata {
+			interface ExportTypeMetadata extends sap.ui.base.ManagedObjectMetadata {
 				/**
 				 * File extension.
 				 */
@@ -5276,7 +5904,7 @@ declare namespace sap.ui {
 				separatorChar?: string;
 			}
 		
-			interface MockServerMetadata {
+			interface MockServerMetadata extends sap.ui.base.ManagedObjectMetadata {
 				/**
 				 * Getter for property <code>rootUri</code>.
 				 * 
@@ -5894,6 +6522,29 @@ declare namespace sap.ui {
 			 */
 			constructor(sId?: string, mSettings?: any);
 			/**
+			 * Creates and initializes a new Component with the given <code>sId</code> and
+			 * settings.
+			 * 
+			 * The set of allowed entries in the <code>mSettings</code> object depends on
+			 * the concrete subclass and is described there. See {@link sap.ui.core.Component}
+			 * for a general description of this argument.
+			 * 
+			 * 
+			 * Accepts an object literal <code>mSettings</code> that defines initial
+			 * property values, aggregated and associated objects as well as event handlers.
+			 * See {@link sap.ui.base.ManagedObject#constructor} for a general description of the syntax of the settings object.
+			 * 
+			 * This class does not have its own settings, but all settings applicable to the base type
+			 * {@link sap.ui.base.ManagedObject#constructor sap.ui.base.ManagedObject} can be used.
+			 * @note Any overloads to support not documented metadata
+			 * @param sId Optional ID for the new control; generated automatically if
+			 *            no non-empty ID is given. Note: this can be omitted, no matter
+			 *            whether <code>mSettings</code> are given or not!(optional)
+			 * @param mSettings Optional map or JSON-object with initial settings for the
+			 *            new Component instance(optional)
+			 */
+			constructor(sId?: string, mSettings?: any);
+			/**
 			 * Cleans up the Component instance before destruction.
 			 * 
 			 * Applications must not call this hook method directly, it is called by the
@@ -6163,7 +6814,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|ComponentContainerMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * ID of the element which is the current target of the association <code>component</code>, or <code>null</code>.
 			 * @return 
@@ -7065,6 +7778,56 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|ControlMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>validateFieldGroup</code> to attached listeners.
@@ -7950,6 +8713,56 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|CustomDataMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>key</code>.
@@ -8093,6 +8906,54 @@ declare namespace sap.ui {
 			 * Accepts an object literal <code>mSettings</code> that defines initial
 			 * property values, aggregated and associated objects as well as event handlers.
 			 * See {@link sap.ui.base.ManagedObject#constructor} for a general description of the syntax of the settings object.
+			 * @param sId id for the new control; generated automatically if no non-empty id is given
+			 *      Note: this can be omitted, no matter whether <code>mSettings</code> will be given or not!(optional)
+			 * @param mSettings optional map/JSON-object with initial property values, aggregated objects etc. for the new element(optional)
+			 */
+			constructor(sId?: string, mSettings?: any);
+			/**
+			 * Constructs and initializes an UI Element with the given <code>sId</code> and settings.
+			 * 
+			 * If the optional <code>mSettings</code> are given, they must be a JSON-like object (object literal)
+			 * that defines values for properties, aggregations, associations or events keyed by their name.
+			 * 
+			 * <b>Valid Names:</b>
+			 * 
+			 * The property (key) names supported in the object literal are exactly the (case sensitive)
+			 * names documented in the JSDoc for the properties, aggregations, associations and events
+			 * of the control and its base classes. Note that for  0..n aggregations and associations this
+			 * usually is the plural name, whereas it is the singular name in case of 0..1 relations.
+			 * 
+			 * If a key name is ambiguous for a specific control class (e.g. a property has the same
+			 * name as an event), then this method prefers property, aggregation, association and
+			 * event in that order. To resolve such ambiguities, the keys can be prefixed with
+			 * <code>aggregation:</code>, <code>association:</code> or <code>event:</code>.
+			 * In that case the keys must be quoted due to the ':'.
+			 * 
+			 * Each subclass should document the set of supported names in its constructor documentation.
+			 * 
+			 * <b>Valid Values:</b>
+			 * 
+			 * <ul>
+			 * <li>for normal properties, the value has to be of the correct simple type (no type conversion occurs)
+			 * <li>for 0..1 aggregations, the value has to be an instance of the aggregated control or element type
+			 * <li>for 0..n aggregations, the value has to be an array of instances of the aggregated type
+			 * <li>for 0..1 associations, an instance of the associated type or an id (string) is accepted
+			 * <li>0..n associations are not supported yet
+			 * <li>for events either a function (event handler) is accepted or an array of length 2
+			 *     where the first element is a function and the 2nd element is an object to invoke the method on.
+			 * </ul>
+			 * 
+			 * Special aggregation "dependents" is connected to the lifecycle management and databinding,
+			 * but not rendered automatically and can be used for popups or other dependent controls. This allows
+			 * definition of popup controls in declarative views and enables propagation of model and context
+			 * information to them.
+			 * 
+			 * 
+			 * Accepts an object literal <code>mSettings</code> that defines initial
+			 * property values, aggregated and associated objects as well as event handlers.
+			 * See {@link sap.ui.base.ManagedObject#constructor} for a general description of the syntax of the settings object.
+			 * @note Any overloads to support not documented metadata
 			 * @param sId id for the new control; generated automatically if no non-empty id is given
 			 *      Note: this can be omitted, no matter whether <code>mSettings</code> will be given or not!(optional)
 			 * @param mSettings optional map/JSON-object with initial property values, aggregated objects etc. for the new element(optional)
@@ -8767,6 +9628,56 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|FragmentMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>type</code>.
@@ -8885,7 +9796,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|HTMLMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>afterRendering</code> to attached listeners.
 			 * 
@@ -9134,7 +10107,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|IconMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>press</code> to attached listeners.
 			 * @param mArguments The arguments to pass along with the event(optional)
@@ -9582,7 +10617,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|InvisibleTextMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>text</code>.
 			 * 
@@ -9709,6 +10806,56 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|ItemMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>enabled</code>.
@@ -9803,6 +10950,13 @@ declare namespace sap.ui {
 			 */
 			constructor(sId?: string, mSettings?: any);
 			/**
+			 * Constructor for a new LayoutData.
+			 * @note Any overloads to support not documented metadata
+			 * @param sId id for the new control, generated automatically if no id is given(optional)
+			 * @param mSettings initial settings for the new control(optional)
+			 */
+			constructor(sId?: string, mSettings?: any);
+			/**
 			 * Creates a new subclass of class sap.ui.core.LayoutData with name <code>sClassName</code>
 			 * and enriches it with the information contained in <code>oClassInfo</code>.
 			 * 
@@ -9849,7 +11003,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|ListItemMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Item with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Item
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|ItemMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>additionalText</code>.
 			 * 
@@ -10492,6 +11708,56 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|MessageMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
 			 * Returns the icon's default URI depending on given size.
@@ -10746,6 +12012,56 @@ declare namespace sap.ui {
 			 * @param oClassInfo Object literal with information about the class(optional)
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|PopupMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
 			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
@@ -11971,7 +13287,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|ScrollBarMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>scroll</code> to attached listeners.
 			 * 
@@ -12164,7 +13542,69 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|OpenSearchProviderMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.search.SearchProvider with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.search.SearchProvider
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|SearchProviderMetadata, FNMetaImpl?: any): any;
 				/**
 				 * Gets current value of property <code>suggestType</code>.
 				 * 
@@ -12256,6 +13696,56 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|SearchProviderMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 				/**
 				 * Gets current value of property <code>icon</code>.
@@ -12312,6 +13802,13 @@ declare namespace sap.ui {
 			 */
 			constructor(sId?: string, mSettings?: any);
 			/**
+			 * Constructor for a new SeparatorItem.
+			 * @note Any overloads to support not documented metadata
+			 * @param sId id for the new control, generated automatically if no id is given(optional)
+			 * @param mSettings initial settings for the new control(optional)
+			 */
+			constructor(sId?: string, mSettings?: any);
+			/**
 			 * Creates a new subclass of class sap.ui.core.SeparatorItem with name <code>sClassName</code>
 			 * and enriches it with the information contained in <code>oClassInfo</code>.
 			 * 
@@ -12322,6 +13819,18 @@ declare namespace sap.ui {
 			 * @return Created class / constructor function
 			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Item with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Item
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|ItemMetadata, FNMetaImpl?: any): any;
 		}
 	
 		namespace service {
@@ -12501,6 +14010,56 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|TitleMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>emphasized</code>.
@@ -12653,6 +14212,56 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|DOMAttributeMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 				/**
 				 * Gets current value of property <code>name</code>.
@@ -12755,7 +14364,69 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|DOMElementMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 				/**
 				 * Gets content of aggregation <code>attributes</code>.
 				 * 
@@ -12891,6 +14562,20 @@ declare namespace sap.ui {
 				 */
 				constructor(sId?: string, mSettings?: any);
 				/**
+				 * Creates and initializes a new handlebars template with the given <code>sId</code>
+				 * and settings.
+				 * 
+				 * The set of allowed entries in the <code>mSettings</code> object depends on
+				 * the concrete subclass and is described there.
+				 * @note Any overloads to support not documented metadata
+				 * @param sId optional id for the new template; generated automatically if
+				 *            no non-empty id is given Note: this can be omitted, no matter
+				 *            whether <code>mSettings</code> will be given or not!(optional)
+				 * @param mSettings optional map/JSON-object with initial settings for the
+				 *            new component instance(optional)
+				 */
+				constructor(sId?: string, mSettings?: any);
+				/**
 				 * Creates a new subclass of class sap.ui.core.tmpl.HandlebarsTemplate with name <code>sClassName</code>
 				 * and enriches it with the information contained in <code>oClassInfo</code>.
 				 * 
@@ -12901,6 +14586,18 @@ declare namespace sap.ui {
 				 * @return Created class / constructor function
 				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.tmpl.Template with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.base.ManagedObject.extend}.
+				 * @note Overload from base type sap.ui.core.tmpl.Template
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|TemplateMetadata, FNMetaImpl?: any): any;
 			}
 		
 			class Template extends sap.ui.base.ManagedObject {
@@ -12973,6 +14670,56 @@ declare namespace sap.ui {
 				 * @param oClassInfo Object literal with information about the class(optional)
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|TemplateMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
 				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 				/**
@@ -13131,7 +14878,69 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|TemplateControlMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 				/**
 				 * Fires event <code>afterRendering</code> to attached listeners.
 				 * @param mArguments The arguments to pass along with the event(optional)
@@ -13213,7 +15022,7 @@ declare namespace sap.ui {
 				tag?: string;
 			}
 		
-			interface TemplateMetadata {
+			interface TemplateMetadata extends sap.ui.base.ManagedObjectMetadata {
 				/**
 				 * The Template definition as a String.
 				 */
@@ -13287,7 +15096,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|TooltipBaseMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>closed</code> to attached listeners.
 			 * @param mArguments The arguments to pass along with the event(optional)
@@ -13725,6 +15596,23 @@ declare namespace sap.ui {
 			 */
 			constructor(sId?: string, mSettings?: any);
 			/**
+			 * Base Class for UIComponent.
+			 * 
+			 * If you are extending an UIComponent make sure you read the {@link #.extend} documentation since the metadata is special.
+			 * 
+			 * 
+			 * Accepts an object literal <code>mSettings</code> that defines initial
+			 * property values, aggregated and associated objects as well as event handlers.
+			 * See {@link sap.ui.base.ManagedObject#constructor} for a general description of the syntax of the settings object.
+			 * @note Any overloads to support not documented metadata
+			 * @param sId Optional ID for the new control; generated automatically if
+			 *            no non-empty ID is given Note: this can be omitted, no matter
+			 *            whether <code>mSettings</code> will be given or not!(optional)
+			 * @param mSettings optional map/JSON-object with initial settings for the
+			 *            new component instance(optional)
+			 */
+			constructor(sId?: string, mSettings?: any);
+			/**
 			 * Returns an element by its ID in the context of the component.
 			 * @param sId Component local ID of the element
 			 * @return element by its ID or <code>undefined</code>
@@ -13889,6 +15777,18 @@ declare namespace sap.ui {
 			 * Accepts an object literal <code>mSettings</code> that defines initial
 			 * property values, aggregated and associated objects as well as event handlers.
 			 * See {@link sap.ui.base.ManagedObject#constructor} for a general description of the syntax of the settings object.
+			 * @param sId id for the new control, generated automatically if no id is given(optional)
+			 * @param mSettings initial settings for the new control(optional)
+			 */
+			constructor(sId?: string, mSettings?: any);
+			/**
+			 * Constructor for a new VariantLayoutData.
+			 * 
+			 * 
+			 * Accepts an object literal <code>mSettings</code> that defines initial
+			 * property values, aggregated and associated objects as well as event handlers.
+			 * See {@link sap.ui.base.ManagedObject#constructor} for a general description of the syntax of the settings object.
+			 * @note Any overloads to support not documented metadata
 			 * @param sId id for the new control, generated automatically if no id is given(optional)
 			 * @param mSettings initial settings for the new control(optional)
 			 */
@@ -14078,6 +15978,10 @@ declare namespace sap.ui {
 			writeToDom?: boolean;
 		}
 	
+		interface FragmentMetadata extends sap.ui.base.ManagedObjectMetadata {
+			type?: string;
+		}
+	
 		interface HTMLMetadata extends sap.ui.core.ControlMetadata {
 			/**
 			 * HTML content to be displayed, defined as a string.
@@ -14261,6 +16165,9 @@ declare namespace sap.ui {
 			 * @default false
 			 */
 			readOnly?: boolean;
+		}
+	
+		interface PopupMetadata extends sap.ui.base.ManagedObjectMetadata {
 		}
 	
 		interface ScrollBarMetadata extends sap.ui.core.ControlMetadata {
@@ -24390,7 +26297,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|CodeSampleContainerMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>apply</code> to attached listeners.
 			 * 
@@ -24575,7 +26544,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|CodeViewerMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>press</code> to attached listeners.
 			 * @param mArguments The arguments to pass along with the event(optional)
@@ -24751,7 +26782,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|FileUploadIntrospectorMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>autoRefreshInterval</code>.
 			 * 
@@ -24886,7 +26979,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|HexagonButtonMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>press</code> to attached listeners.
 			 * @param mArguments The arguments to pass along with the event(optional)
@@ -25033,7 +27188,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|HexagonButtonGroupMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets content of aggregation <code>buttons</code>.
 			 * 
@@ -25139,7 +27356,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|IndexLayoutMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets content of aggregation <code>content</code>.
 			 * 
@@ -25276,6 +27555,56 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|TagMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>text</code>.
@@ -25384,7 +27713,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|TagCloudMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>press</code> to attached listeners.
 			 * 
@@ -25537,7 +27928,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|UI5EntityCueCardMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>navigate</code> to attached listeners.
 			 * 
@@ -25658,6 +28111,18 @@ declare namespace sap.ui {
 			 * Accepts an object literal <code>mSettings</code> that defines initial
 			 * property values, aggregated and associated objects as well as event handlers.
 			 * See {@link sap.ui.base.ManagedObject#constructor} for a general description of the syntax of the settings object.
+			 * @param sId id for the new control, generated automatically if no id is given(optional)
+			 * @param mSettings initial settings for the new control(optional)
+			 */
+			constructor(sId?: string, mSettings?: any);
+			/**
+			 * Constructor for a new UIAreaSubstitute.
+			 * 
+			 * 
+			 * Accepts an object literal <code>mSettings</code> that defines initial
+			 * property values, aggregated and associated objects as well as event handlers.
+			 * See {@link sap.ui.base.ManagedObject#constructor} for a general description of the syntax of the settings object.
+			 * @note Any overloads to support not documented metadata
 			 * @param sId id for the new control, generated automatically if no id is given(optional)
 			 * @param mSettings initial settings for the new control(optional)
 			 */
@@ -25974,7 +28439,69 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|FormMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 				/**
 				 * Returns array of IDs of the elements which are the current targets of the association <code>ariaLabelledBy</code>.
 				 * @return 
@@ -26182,6 +28709,56 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|FormContainerMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 				/**
 				 * Returns array of IDs of the elements which are the current targets of the association <code>ariaLabelledBy</code>.
@@ -26388,6 +28965,56 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|FormElementMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 				/**
 				 * Gets content of aggregation <code>fields</code>.
@@ -26508,7 +29135,69 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|FormLayoutMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 				/**
 				 * Gets current value of property <code>backgroundDesign</code>.
 				 * 
@@ -26570,6 +29259,56 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|GridContainerDataMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 				/**
 				 * Gets current value of property <code>halfGrid</code>.
@@ -26629,6 +29368,56 @@ declare namespace sap.ui {
 				 * @param oClassInfo Object literal with information about the class(optional)
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|GridElementDataMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
 				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 				/**
@@ -26715,7 +29504,81 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|GridLayoutMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.layout.form.FormLayout with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Control.extend}.
+				 * @note Overload from base type sap.ui.layout.form.FormLayout
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|FormLayoutMetadata, FNMetaImpl?: any): any;
 				/**
 				 * Gets current value of property <code>singleColumn</code>.
 				 * 
@@ -26777,7 +29640,81 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|ResponsiveGridLayoutMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.layout.form.FormLayout with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Control.extend}.
+				 * @note Overload from base type sap.ui.layout.form.FormLayout
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|FormLayoutMetadata, FNMetaImpl?: any): any;
 				/**
 				 * Gets current value of property <code>adjustLabelSpan</code>.
 				 * 
@@ -27172,6 +30109,13 @@ declare namespace sap.ui {
 				 */
 				constructor(sId?: string, mSettings?: any);
 				/**
+				 * Constructor for a new sap.ui.layout.form.ResponsiveLayout.
+				 * @note Any overloads to support not documented metadata
+				 * @param sId Id for the new control, generated automatically if no id is given(optional)
+				 * @param mSettings initial settings for the new control(optional)
+				 */
+				constructor(sId?: string, mSettings?: any);
+				/**
 				 * Creates a new subclass of class sap.ui.layout.form.ResponsiveLayout with name <code>sClassName</code>
 				 * and enriches it with the information contained in <code>oClassInfo</code>.
 				 * 
@@ -27182,6 +30126,30 @@ declare namespace sap.ui {
 				 * @return Created class / constructor function
 				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.layout.form.FormLayout with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Control.extend}.
+				 * @note Overload from base type sap.ui.layout.form.FormLayout
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|FormLayoutMetadata, FNMetaImpl?: any): any;
 			}
 		
 			class SimpleForm extends sap.ui.core.Control {
@@ -27245,7 +30213,69 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|SimpleFormMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 				/**
 				 * Gets current value of property <code>adjustLabelSpan</code>.
 				 * 
@@ -28404,7 +31434,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|BlockLayoutMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>background</code>.
 			 * 
@@ -28510,7 +31602,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|BlockLayoutCellMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets content of aggregation <code>content</code>.
 			 * 
@@ -28676,7 +31830,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|BlockLayoutRowMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets content of aggregation <code>content</code>.
 			 * 
@@ -28819,7 +32035,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|DynamicSideContentMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>breakpointChanged</code> to attached listeners.
 			 * 
@@ -29096,7 +32374,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|FixFlexMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets content of aggregation <code>fixContent</code>.
 			 * 
@@ -29278,7 +32618,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|GridMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * 
 			 */
@@ -29537,6 +32939,56 @@ declare namespace sap.ui {
 			 * @param oClassInfo Object literal with information about the class(optional)
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|GridDataMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
 			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
@@ -29994,7 +33446,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|HorizontalLayoutMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * 
 			 */
@@ -30139,6 +33653,56 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|PaneContainerMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>orientation</code>.
@@ -30254,7 +33818,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|ResponsiveFlowLayoutMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets content of aggregation <code>content</code>.
 			 * 
@@ -30348,6 +33974,56 @@ declare namespace sap.ui {
 			 * @param oClassInfo Object literal with information about the class(optional)
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|ResponsiveFlowLayoutDataMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
 			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
@@ -30496,7 +34172,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|ResponsiveSplitterMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * ID of the element which is the current target of the association <code>defaultPane</code>, or <code>null</code>.
 			 * @return 
@@ -30656,6 +34394,56 @@ declare namespace sap.ui {
 			 * @param oClassInfo Object literal with information about the class(optional)
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|SplitPaneMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
 			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
@@ -30822,7 +34610,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|SplitterMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>resize</code> to attached listeners.
 			 * 
@@ -30987,6 +34837,56 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|SplitterLayoutDataMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>minSize</code>.
@@ -31098,7 +34998,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|VerticalLayoutMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * 
 			 */
@@ -31665,7 +35627,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|TaskCircleMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>press</code> to attached listeners.
 			 * @param mArguments The arguments to pass along with the event(optional)
@@ -31862,7 +35886,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|VerticalProgressIndicatorMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>press</code> to attached listeners.
 			 * @param mArguments The arguments to pass along with the event(optional)
@@ -32006,7 +36092,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|AnalyticalColumnMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.table.Column with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.table.Column
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|ColumnMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>groupHeaderFormatter</code>.
 			 * 
@@ -32124,6 +36272,30 @@ declare namespace sap.ui {
 			 * @return Created class / constructor function
 			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.unified.Menu with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Control.extend}.
+			 * @note Overload from base type sap.ui.unified.Menu
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.unified.MenuMetadata, FNMetaImpl?: any): any;
 		}
 	
 		class AnalyticalTable extends Table {
@@ -32197,7 +36369,81 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|AnalyticalTableMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.table.Table with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Control.extend}.
+			 * @note Overload from base type sap.ui.table.Table
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|TableMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>autoExpandMode</code>.
 			 * 
@@ -32558,6 +36804,56 @@ declare namespace sap.ui {
 			 * @param oClassInfo Object literal with information about the class(optional)
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|ColumnMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
 			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
@@ -33183,6 +37479,30 @@ declare namespace sap.ui {
 			 * @return Created class / constructor function
 			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.unified.Menu with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Control.extend}.
+			 * @note Overload from base type sap.ui.unified.Menu
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.unified.MenuMetadata, FNMetaImpl?: any): any;
 		}
 	
 		class GroupEventType {
@@ -33231,6 +37551,18 @@ declare namespace sap.ui {
 			 * Accepts an object literal <code>mSettings</code> that defines initial
 			 * property values, aggregated and associated objects as well as event handlers.
 			 * See {@link sap.ui.base.ManagedObject#constructor} for a general description of the syntax of the settings object.
+			 * @param sId id for the new control, generated automatically if no id is given(optional)
+			 * @param mSettings initial settings for the new control(optional)
+			 */
+			constructor(sId?: string, mSettings?: any);
+			/**
+			 * Constructor for a new Row.
+			 * 
+			 * 
+			 * Accepts an object literal <code>mSettings</code> that defines initial
+			 * property values, aggregated and associated objects as well as event handlers.
+			 * See {@link sap.ui.base.ManagedObject#constructor} for a general description of the syntax of the settings object.
+			 * @note Any overloads to support not documented metadata
 			 * @param sId id for the new control, generated automatically if no id is given(optional)
 			 * @param mSettings initial settings for the new control(optional)
 			 */
@@ -33803,7 +38135,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|TableMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * filter the given column by the given value
 			 * @param oColumn column to be filtered
@@ -34868,6 +39262,56 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|TablePersoControllerMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>autoSave</code>.
@@ -35094,7 +39538,81 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|TreeTableMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.table.Table with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Control.extend}.
+			 * @note Overload from base type sap.ui.table.Table
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|TableMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>toggleOpenState</code> to attached listeners.
 			 * 
@@ -35733,7 +40251,7 @@ declare namespace sap.ui {
 			enableBusyIndicator?: boolean;
 		}
 	
-		interface TablePersoControllerMetadata {
+		interface TablePersoControllerMetadata extends sap.ui.base.ManagedObjectMetadata {
 			/**
 			 * Auto save state
 			 * @default true
@@ -35854,7 +40372,81 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|DatesRowMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.unified.calendar.Month with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Control.extend}.
+				 * @note Overload from base type sap.ui.unified.calendar.Month
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|MonthMetadata, FNMetaImpl?: any): any;
 				/**
 				 * Gets current value of property <code>days</code>.
 				 * 
@@ -36110,7 +40702,69 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|HeaderMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 				/**
 				 * Fires event <code>pressButton0</code> to attached listeners.
 				 * @param mArguments The arguments to pass along with the event(optional)
@@ -36535,7 +41189,69 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|MonthMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 				/**
 				 * Fires event <code>focus</code> to attached listeners.
 				 * 
@@ -36954,7 +41670,69 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|MonthPickerMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 				/**
 				 * Fires event <code>pageChange</code> to attached listeners.
 				 * @param mArguments The arguments to pass along with the event(optional)
@@ -37197,7 +41975,69 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|MonthsRowMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 				/**
 				 * Fires event <code>focus</code> to attached listeners.
 				 * 
@@ -37576,7 +42416,69 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|TimesRowMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 				/**
 				 * Fires event <code>focus</code> to attached listeners.
 				 * 
@@ -37939,7 +42841,69 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|YearPickerMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+				 * @note Overload from base type sap.ui.core.Control
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 				/**
 				 * Fires event <code>pageChange</code> to attached listeners.
 				 * @param mArguments The arguments to pass along with the event(optional)
@@ -38468,7 +43432,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|CalendarMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>cancel</code> to attached listeners.
 			 * @param mArguments The arguments to pass along with the event(optional)
@@ -38901,7 +43927,81 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|CalendarAppointmentMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.unified.DateRange with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.unified.DateRange
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|DateRangeMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.unified.DateTypeRange with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.unified.DateRange.extend}.
+			 * @note Overload from base type sap.ui.unified.DateTypeRange
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|DateTypeRangeMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>icon</code>.
 			 * 
@@ -39063,7 +44163,81 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|CalendarDateIntervalMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.unified.Calendar with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Control.extend}.
+			 * @note Overload from base type sap.ui.unified.Calendar
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|CalendarMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>days</code>.
 			 * 
@@ -39292,7 +44466,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|CalendarLegendMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>columnWidth</code>.
 			 * 
@@ -39386,6 +44622,56 @@ declare namespace sap.ui {
 			 * @param oClassInfo Object literal with information about the class(optional)
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|CalendarLegendItemMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
 			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
@@ -39564,7 +44850,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|CalendarMonthIntervalMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>cancel</code> to attached listeners.
 			 * @param mArguments The arguments to pass along with the event(optional)
@@ -40024,7 +45372,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|CalendarRowMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>intervalSelect</code> to attached listeners.
 			 * 
@@ -40699,7 +46109,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|CalendarTimeIntervalMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>cancel</code> to attached listeners.
 			 * @param mArguments The arguments to pass along with the event(optional)
@@ -41095,7 +46567,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|ContentSwitcherMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>activeContent</code>.
 			 * 
@@ -41286,7 +46820,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|CurrencyMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * 
 			 */
@@ -41412,6 +47008,56 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|DateRangeMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>endDate</code>.
@@ -41483,7 +47129,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|DateTypeRangeMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.unified.DateRange with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.unified.DateRange
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|DateRangeMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>type</code>.
 			 * 
@@ -41775,7 +47483,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|FileUploaderMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>change</code> to attached listeners.
 			 * 
@@ -42505,6 +48275,56 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|FileUploaderParameterMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>name</code>.
@@ -42620,7 +48440,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|MenuMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>itemSelect</code> to attached listeners.
 			 * 
@@ -42812,7 +48694,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|MenuItemMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.unified.MenuItemBase with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.unified.MenuItemBase
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|MenuItemBaseMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>icon</code>.
 			 * 
@@ -42919,6 +48863,56 @@ declare namespace sap.ui {
 			 * @param oClassInfo Object literal with information about the class(optional)
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|MenuItemBaseMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
 			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
@@ -43090,7 +49084,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|MenuTextFieldItemMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.unified.MenuItemBase with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.unified.MenuItemBase
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|MenuItemBaseMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets current value of property <code>icon</code>.
 			 * 
@@ -43285,7 +49341,81 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|ShellMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.unified.ShellLayout with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Control.extend}.
+			 * @note Overload from base type sap.ui.unified.ShellLayout
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|ShellLayoutMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets content of aggregation <code>curtainContent</code>.
 			 * 
@@ -43575,6 +49705,56 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|ShellHeadItemMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>press</code> to attached listeners.
@@ -43767,6 +49947,56 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|ShellHeadUserItemMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>press</code> to attached listeners.
@@ -43914,7 +50144,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|ShellLayoutMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets content of aggregation <code>content</code>.
 			 * 
@@ -44078,6 +50370,18 @@ declare namespace sap.ui {
 			 * @param sId id for the new control, generated automatically if no id is given(optional)
 			 * @param mSettings initial settings for the new control(optional)
 			 */
+			constructor(sId?: string, mSettings?: sap.ui.unified.ShellOverlayMetadata);
+			/**
+			 * Constructor for a new ShellOverlay.
+			 * 
+			 * 
+			 * Accepts an object literal <code>mSettings</code> that defines initial
+			 * property values, aggregated and associated objects as well as event handlers.
+			 * See {@link sap.ui.base.ManagedObject#constructor} for a general description of the syntax of the settings object.
+			 * @note Any overloads to support not documented metadata
+			 * @param sId id for the new control, generated automatically if no id is given(optional)
+			 * @param mSettings initial settings for the new control(optional)
+			 */
 			constructor(sId?: string, mSettings?: any);
 			/**
 			 * Adds some ariaLabelledBy into the association <code>ariaLabelledBy</code>.
@@ -44137,7 +50441,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|ShellOverlayMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>closed</code> to attached listeners.
 			 * @param mArguments The arguments to pass along with the event(optional)
@@ -44283,7 +50649,69 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|SplitContainerMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+			/**
+			 * Creates a new subclass of class sap.ui.core.Control with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Element.extend}.
+			 * @note Overload from base type sap.ui.core.Control
+			 * @param sClassName Name of the class being created
+			 * @param oClassInfo Object literal with information about the class(optional)
+			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 			/**
 			 * Gets content of aggregation <code>content</code>.
 			 * 
@@ -45121,6 +51549,9 @@ declare namespace sap.ui {
 			headerVisible?: boolean;
 		}
 	
+		interface ShellOverlayMetadata extends sap.ui.core.ControlMetadata {
+		}
+	
 		interface SplitContainerMetadata extends sap.ui.core.ControlMetadata {
 			/**
 			 * Shows / Hides the secondary area.
@@ -45513,6 +51944,56 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|ActionMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 				/**
 				 * Gets current value of property <code>idSuffix</code>.
@@ -45568,7 +52049,69 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|EnterTextMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.test.actions.Action with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.base.ManagedObject.extend}.
+				 * @note Overload from base type sap.ui.test.actions.Action
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|ActionMetadata, FNMetaImpl?: any): any;
 				/**
 				 * Gets current value of property <code>clearTextFirst</code>.
 				 * 
@@ -45690,6 +52233,30 @@ declare namespace sap.ui {
 				 * @return Created class / constructor function
 				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
+				/**
+				 * Creates a new subclass of class sap.ui.test.actions.Action with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.base.ManagedObject.extend}.
+				 * @note Overload from base type sap.ui.test.actions.Action
+				 * @param sClassName Name of the class being created
+				 * @param oClassInfo Object literal with information about the class(optional)
+				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|ActionMetadata, FNMetaImpl?: any): any;
+			}
+		
+			interface ActionMetadata extends sap.ui.base.ManagedObjectMetadata {
+				idSuffix?: string;
+			}
+		
+			interface EnterTextMetadata extends sap.ui.test.actions.ActionMetadata {
+				/**
+				 * The Text that is going to be typed to the control. If you are entering an empty string, the value will be cleared.
+				 */
+				text?: string;
+				clearTextFirst?: boolean;
 			}
 		}
 	
@@ -45724,6 +52291,56 @@ declare namespace sap.ui {
 				 * @param oClassInfo Object literal with information about the class(optional)
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|AggregationContainsPropertyEqualMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
 				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 				/**
@@ -45815,6 +52432,56 @@ declare namespace sap.ui {
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
 				 */
+				extend(sClassName: string, oClassInfo?: any|AggregationFilledMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
+				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 				/**
 				 * Gets current value of property <code>name</code>.
@@ -45870,6 +52537,56 @@ declare namespace sap.ui {
 				 * @param oClassInfo Object literal with information about the class(optional)
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|AggregationLengthEqualsMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
 				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 				/**
@@ -45952,6 +52669,56 @@ declare namespace sap.ui {
 				 * @param oClassInfo Object literal with information about the class(optional)
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|BindingPathMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
 				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 				/**
@@ -46087,6 +52854,56 @@ declare namespace sap.ui {
 				 * @param oClassInfo Object literal with information about the class(optional)
 				 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 				 * @return Created class / constructor function
+				 */
+				extend(sClassName: string, oClassInfo?: any|PropertyStrictEqualsMetadata, FNMetaImpl?: any): any;
+				/**
+				 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+				 * and enriches it with the information contained in <code>oClassInfo</code>.
+				 * 
+				 * <code>oClassInfo</code> might contain three kinds of informations:
+				 * <ul>
+				 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+				 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+				 * and might contain the following information
+				 * <ul>
+				 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+				 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+				 * facade of the class</li>
+				 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+				 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+				 * </ul>
+				 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+				 * </li>
+				 * 
+				 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+				 * If no constructor function is given, the framework creates a default implementation that delegates all
+				 * its arguments to the constructor function of the base class.
+				 * </li>
+				 * 
+				 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+				 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+				 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+				 * make sense to use primitive values here other than to declare public constants.
+				 * </li>
+				 * 
+				 * </ul>
+				 * 
+				 * The prototype object of the newly created class uses the same prototype as instances of the base class
+				 * (prototype chaining).
+				 * 
+				 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+				 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+				 * itself.
+				 * 
+				 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+				 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+				 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+				 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+				 * @note Overload from base type sap.ui.base.Object
+				 * @param sClassName name of the class to be created
+				 * @param oClassInfo structured object with informations about the class(optional)
+				 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+				 * @return the created class / constructor function
 				 */
 				extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 				/**

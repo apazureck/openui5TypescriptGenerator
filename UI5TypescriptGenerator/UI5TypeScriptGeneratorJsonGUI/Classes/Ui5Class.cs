@@ -18,18 +18,22 @@ namespace UI5TypeScriptGeneratorJsonGUI
 
             string metadata = null;
 
-            if (ui5Metadata != null)
-                metadata = CreateMetaDataStrings();
+            //if (ui5Metadata != null)
+            //    metadata = CreateMetaDataStrings();
 
             if (constructor.visibility == Visibility.Public && constructor.IncludedInVersion())
             {
                 sb.AppendLine(constructor.SerializeTypescriptMethodStubs().Aggregate((a, b) => a + ";" + Environment.NewLine + b) + ";", 1);
                 // Create overload with any (to be extendable and get all intellisense experience.
-                if (Metadata!=null)
+                if (ui5Metadata!=null)
                 {
-                    constructor.parameters.First(x => x.name == "mSettings").type = "any";
-                    constructor.description += Environment.NewLine + "@note Any overloads to support not documented metadata";
-                    sb.AppendLine(constructor.SerializeTypescriptMethodStubs().Aggregate((a, b) => a + ";" + Environment.NewLine + b) + ";", 1);
+                    var msettings = constructor.parameters.FirstOrDefault(x => x.name == "mSettings");
+                    if(msettings!=null)
+                    {
+                        msettings.type = "any";
+                        constructor.description += Environment.NewLine + "@note Any overloads to support not documented metadata";
+                        sb.AppendLine(constructor.SerializeTypescriptMethodStubs().Aggregate((a, b) => a + ";" + Environment.NewLine + b) + ";", 1);
+                    }
                 }
             }
 
@@ -39,8 +43,8 @@ namespace UI5TypeScriptGeneratorJsonGUI
 
             sb.AppendLine("}");
 
-            if(metadata != null)
-                sb.AppendLine(metadata, 1);
+            //if(metadata != null)
+            //    sb.AppendLine(metadata, 1);
 
             return sb.ToString();
         }
@@ -58,27 +62,37 @@ namespace UI5TypeScriptGeneratorJsonGUI
                 return;
 
             // Create Interface for initialization
-            if (ui5Metadata.properties == null)
+            if (ui5Metadata.properties == null && ui5Metadata.events == null)
                 return;
+
+            // Create Metadata
+            if (Metadata == null)
+            {
+                Metadata = new Ui5Interface
+                {
+                    properties = ui5Metadata.properties,
+                    name = fullname + suffix,
+                    extends = (extends != null ? extends + suffix : null),
+                    events = ui5Metadata.events??null
+                };
+                parentNamespace?.Content.Add(Metadata);
+                Metadata.parentNamespace = parentNamespace;
+            }
 
             // update constructor props
             var param = constructor.parameters.FirstOrDefault(x => x.name == "mSettings");
 
             if (param != null)
+                param.type = Metadata.fullname;
+
+            var extendmethod = methods.FirstOrDefault(x => x.name == "extend");
+            if (extendmethod != null)
             {
-                param.type = fullname + suffix;
-                if(Metadata == null)
-                {
-                    Metadata = new Ui5Interface
-                    {
-                        properties = ui5Metadata.properties,
-                        name = param.type,
-                        extends = (extends != null ? extends + suffix : null)
-                    };
-                    parentNamespace?.Content.Add(Metadata);
-                    Metadata.parentNamespace = parentNamespace;
-                }
+                var classinfo = extendmethod.parameters.FirstOrDefault(x => x.name == "oClassInfo");
+                if (classinfo != null)
+                    classinfo.type += "|" + Metadata.fullname;
             }
+
         }
 
         public void ConnectMetadata(IEnumerable<Ui5Interface> allInterfaces)

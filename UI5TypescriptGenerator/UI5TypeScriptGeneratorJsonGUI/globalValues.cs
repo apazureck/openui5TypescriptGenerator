@@ -9,6 +9,8 @@ namespace UI5TypeScriptGeneratorJsonGUI
 {
     public static class globalValues
     {
+        internal static List<string> eventparameters = new List<string>();
+
         public static Dictionary<string, string> TranslationDictionary { get; set; }
         public static Dictionary<string, int> UntouchedTypes { get; set; } = new Dictionary<string, int>();
 

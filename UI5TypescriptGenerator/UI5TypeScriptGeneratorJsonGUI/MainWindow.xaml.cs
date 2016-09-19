@@ -279,6 +279,8 @@ namespace UI5TypeScriptGeneratorJsonGUI
                 Log("Conversion successfully executed.");
 
                 Output = globalValues.UntouchedTypes.Select(x => x.Key + "(" + x.Value.ToString() + ")").OrderBy(x => x).Aggregate((a, b) => a + Environment.NewLine + b);
+
+                EventProperties = globalValues.eventparameters.Aggregate((a, b) => a + Environment.NewLine + b);
             });
         }
 
@@ -526,6 +528,10 @@ namespace UI5TypeScriptGeneratorJsonGUI
                     }
 
             List<string> files = new List<string>();
+
+            if (!Directory.Exists(OutputFolder))
+                Directory.CreateDirectory(OutputFolder);
+
             foreach(var entry in namespaces)
             {
                 string filename = entry.fullname + ".d.ts";
@@ -587,6 +593,14 @@ namespace UI5TypeScriptGeneratorJsonGUI
                 return "Not valid input for dictionary.";
             }
         }
+
+        public string EventProperties
+        {
+            get { return eventProperties; }
+            set { eventProperties = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EventProperties))); }
+        }
+        private string eventProperties;
+
 
         public string this[string columnName]
         {
