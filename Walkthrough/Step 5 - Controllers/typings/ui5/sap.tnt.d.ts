@@ -1015,6 +1015,11 @@ declare namespace sap.tnt {
 		 * @default true
 		 */
 		expanded?: boolean;
+		/**
+		 * Fired when an item is selected.
+		 * @param item The selected item.
+		 */
+		itemSelect?: (item: sap.ui.core.Item) => void;
 	}
 
 	interface NavigationListItemMetadata extends sap.ui.core.ItemMetadata {
@@ -1033,6 +1038,11 @@ declare namespace sap.tnt {
 		 * @default true
 		 */
 		hasExpander?: boolean;
+		/**
+		 * Fired when this item is selected.
+		 * @param item The selected item.
+		 */
+		select?: (item: sap.ui.core.Item) => void;
 	}
 
 	interface SideNavigationMetadata extends sap.ui.core.ControlMetadata {
@@ -1041,6 +1051,11 @@ declare namespace sap.tnt {
 		 * @default true
 		 */
 		expanded?: boolean;
+		/**
+		 * Fired when an item is selected.
+		 * @param item The selected item.
+		 */
+		itemSelect?: (item: sap.ui.core.Item) => void;
 	}
 
 	interface ToolPageMetadata extends sap.ui.core.ControlMetadata {

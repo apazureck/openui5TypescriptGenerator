@@ -1,7 +1,8 @@
 ﻿using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
-using System;
 using Newtonsoft.Json;
+using System.Text;
+using System.Linq;
 
 namespace UI5TypeScriptGeneratorJsonGUI
 {
@@ -23,9 +24,34 @@ namespace UI5TypeScriptGeneratorJsonGUI
             }
         }
 
+        public string CreateDescription(IEnumerable<Ui5Parameter> pars)
+        {
+            StringBuilder csb = new StringBuilder();
+            csb.AppendLine(description);
+            foreach (Ui5Parameter par in pars)
+                csb.AppendLine("@param " + par.name + " " + par.description + (par.optional ? "(optional)" : ""));
+            if (deprecated != null)
+                csb.AppendLine("@deprecated " + (since != null ? "since version " + since + ":" : "") + deprecated.text);
+            return csb.ToString();
+        }
+
         public string SerializeTypescript()
         {
-            return null;
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendComment(CreateDescription(Parameters));
+
+            sb.Append(name);
+            sb.Append("?: (");
+
+            // append parameters
+            sb.Append(Parameters.Where(x => !string.IsNullOrWhiteSpace(x.name)).Aggregate("", (a, b) =>
+            {
+                return a + ", " + b.name + (b.optional ? "?" : "") +
+                (string.IsNullOrWhiteSpace(b.type) ? "" : ": " + b.GetRelativeTypeDef(owner));
+            }).TrimStart(", ".ToCharArray()));
+            sb.Append(") => void");
+            return sb.ToString();
         }
     }
 }

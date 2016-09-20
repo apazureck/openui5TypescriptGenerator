@@ -5,8 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UI5TypeScriptGeneratorJsonGUI"
         mc:Ignorable="d"
-        Title="MainWindow" Height="365.896" Width="937.13">
-    <TabControl>
+        Title="MainWindow" Height="365.896" Width="937.13"
+        KeyDown="Window_KeyDown">
+    <TabControl x:Name="tabctrl">
         <TabItem Header="Settings">
             <DockPanel ScrollViewer.VerticalScrollBarVisibility="Auto" LastChildFill="True">
                 <Label DockPanel.Dock="Top">Address</Label>
@@ -58,11 +59,16 @@
         </TabItem>
         <TabItem Header="Output">
             <DockPanel LastChildFill="True">
-                <Button Click="Button_Click" DockPanel.Dock="Top">Get Type Definitions</Button>
-                <Button Click="OpenOutputFolder_Click" DockPanel.Dock="Top">Go to ouptut folder</Button>
+                <Button Click="Button_Click" DockPanel.Dock="Top">Get Type Definitions (F5)</Button>
+                <Button Click="OpenOutputFolder_Click" DockPanel.Dock="Top">Go to ouptut folder (F12)</Button>
                 <Button Click="ClearHistory_Click" DockPanel.Dock="Top">Clear History</Button>
                 <TextBox ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" Text="{Binding Output}" DockPanel.Dock="Right" Margin="5" Width="500"/>
-                <ListView ItemsSource="{Binding LogEntries}" Margin="5" x:Name="log">
+                <ListView ItemsSource="{Binding LogEntries}" Margin="5" x:Name="log" SelectionMode="Multiple" KeyDown="log_KeyDown">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding Text}" BorderThickness="0" Margin="0" Padding="0" Background="{x:Null}" IsHitTestVisible="False"/>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
                 </ListView>
             </DockPanel>
         </TabItem>

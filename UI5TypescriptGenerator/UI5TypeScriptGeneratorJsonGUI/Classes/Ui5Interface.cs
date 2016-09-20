@@ -32,7 +32,11 @@ namespace UI5TypeScriptGeneratorJsonGUI
         {
             if (events != null)
                 foreach (Ui5Event e in events)
-                    e.DeserializeParameters();
+                    if(e.IncludedInVersion())
+                    {
+                        e.DeserializeParameters();
+                        sb.AppendLine(e.SerializeTypescript()+";", 1);
+                    }
         }
     }
 }

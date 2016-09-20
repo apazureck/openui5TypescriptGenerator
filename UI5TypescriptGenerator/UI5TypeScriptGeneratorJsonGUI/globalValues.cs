@@ -63,6 +63,7 @@ namespace UI5TypeScriptGeneratorJsonGUI
             { "void", "" }
         };
         public static Dictionary<string, string> SkipMethods { get; internal set; }
+        public static ILog Log { get; set; }
 
         public static bool IsBaseType(string type)
         {

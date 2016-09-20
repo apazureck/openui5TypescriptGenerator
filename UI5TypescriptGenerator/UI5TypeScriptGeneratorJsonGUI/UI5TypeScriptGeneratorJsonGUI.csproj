@@ -94,6 +94,7 @@
     <Compile Include="ILog.cs" />
     <Compile Include="ITyping.cs" />
     <Compile Include="LinqExtensions.cs" />
+    <Compile Include="LogItem.cs" />
     <Compile Include="StringBuilderExtensions.cs" />
     <Compile Include="SymbolEqualityComparer.cs" />
     <Compile Include="TypeScriptSerializer.cs" />

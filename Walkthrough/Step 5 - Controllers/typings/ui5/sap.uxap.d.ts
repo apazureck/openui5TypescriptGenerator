@@ -3813,6 +3813,21 @@ declare namespace sap.uxap {
 		 * @default false
 		 */
 		markChanges?: boolean;
+		/**
+		 * The event is fired when the objectPage header title selector (down-arrow) is pressed
+		 * @param domRef DOM reference of the title item's icon to be used for positioning.
+		 */
+		titleSelectorPress?: (domRef: string) => void;
+		/**
+		 * The event is fired when the Locked button is pressed
+		 * @param domRef DOM reference of the lock item's icon to be used for positioning.
+		 */
+		markLockedPress?: (domRef: string) => void;
+		/**
+		 * The event is fired when the unsaved changes button is pressed
+		 * @param domRef DOM reference of the changed item's icon to be used for positioning.
+		 */
+		markChangesPress?: (domRef: string) => void;
 	}
 
 	interface ObjectPageHeaderActionButtonMetadata extends sap.m.ButtonMetadata {
@@ -3954,6 +3969,20 @@ declare namespace sap.uxap {
 		 * @default false
 		 */
 		showFooter?: boolean;
+		/**
+		 * The event is fired when the Anchor bar is switched from moving to fixed or the other way round.
+		 * @param fixed False indicates that the Anchor bar has just detached from the Header and became part of the scrolling area. True means that the Anchor bar has just snapped to the Header.
+		 */
+		toggleAnchorBar?: (fixed: boolean) => void;
+		/**
+		 * The event is fired when the Edit Header button is pressed
+		 */
+		editHeaderButtonPress?: () => void;
+		/**
+		 * The event is fired when the selected section is changed using the navigation.
+		 * @param section The selected section object.
+		 */
+		navigate?: (section: sap.uxap.ObjectPageSection) => void;
 	}
 
 	interface ObjectPageSectionMetadata extends sap.uxap.ObjectPageSectionBaseMetadata {

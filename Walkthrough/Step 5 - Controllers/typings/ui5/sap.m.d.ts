@@ -4526,6 +4526,18 @@ declare namespace sap.m {
 		 */
 		extend(sClassName: string, oClassInfo?: any|ComboBoxTextFieldMetadata, FNMetaImpl?: any): any;
 		/**
+		 * Creates a new subclass of class sap.m.ComboBoxBase with name <code>sClassName</code>
+		 * and enriches it with the information contained in <code>oClassInfo</code>.
+		 * 
+		 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.m.ComboBoxTextField.extend}.
+		 * @note Overload from base type sap.m.ComboBoxBase
+		 * @param sClassName Name of the class being created
+		 * @param oClassInfo Object literal with information about the class(optional)
+		 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+		 * @return Created class / constructor function
+		 */
+		extend(sClassName: string, oClassInfo?: any|ComboBoxBaseMetadata, FNMetaImpl?: any): any;
+		/**
 		 * Fires event <code>selectionChange</code> to attached listeners.
 		 * 
 		 * Expects the following event parameters:
@@ -4673,7 +4685,7 @@ declare namespace sap.m {
 		 * @param sId ID for the new control, generated automatically if no ID is given.(optional)
 		 * @param mSettings Initial settings for the new control.(optional)
 		 */
-		constructor(sId?: string, mSettings?: any);
+		constructor(sId?: string, mSettings?: sap.m.ComboBoxBaseMetadata);
 		/**
 		 * Constructor for a new <code>sap.m.ComboBoxBase</code>.
 		 * 
@@ -4764,6 +4776,56 @@ declare namespace sap.m {
 		 * @param oClassInfo Object literal with information about the class(optional)
 		 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 		 * @return Created class / constructor function
+		 */
+		extend(sClassName: string, oClassInfo?: any|ComboBoxBaseMetadata, FNMetaImpl?: any): any;
+		/**
+		 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+		 * and enriches it with the information contained in <code>oClassInfo</code>.
+		 * 
+		 * <code>oClassInfo</code> might contain three kinds of informations:
+		 * <ul>
+		 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+		 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+		 * and might contain the following information
+		 * <ul>
+		 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+		 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+		 * facade of the class</li>
+		 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+		 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+		 * </ul>
+		 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+		 * </li>
+		 * 
+		 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+		 * If no constructor function is given, the framework creates a default implementation that delegates all
+		 * its arguments to the constructor function of the base class.
+		 * </li>
+		 * 
+		 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+		 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+		 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+		 * make sense to use primitive values here other than to declare public constants.
+		 * </li>
+		 * 
+		 * </ul>
+		 * 
+		 * The prototype object of the newly created class uses the same prototype as instances of the base class
+		 * (prototype chaining).
+		 * 
+		 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+		 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+		 * itself.
+		 * 
+		 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+		 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+		 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+		 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+		 * @note Overload from base type sap.ui.base.Object
+		 * @param sClassName name of the class to be created
+		 * @param oClassInfo structured object with informations about the class(optional)
+		 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+		 * @return the created class / constructor function
 		 */
 		extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 		/**
@@ -19290,6 +19352,18 @@ declare namespace sap.m {
 		 */
 		extend(sClassName: string, oClassInfo?: any|ComboBoxTextFieldMetadata, FNMetaImpl?: any): any;
 		/**
+		 * Creates a new subclass of class sap.m.ComboBoxBase with name <code>sClassName</code>
+		 * and enriches it with the information contained in <code>oClassInfo</code>.
+		 * 
+		 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.m.ComboBoxTextField.extend}.
+		 * @note Overload from base type sap.m.ComboBoxBase
+		 * @param sClassName Name of the class being created
+		 * @param oClassInfo Object literal with information about the class(optional)
+		 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+		 * @return Created class / constructor function
+		 */
+		extend(sClassName: string, oClassInfo?: any|ComboBoxBaseMetadata, FNMetaImpl?: any): any;
+		/**
 		 * Fires event <code>selectionChange</code> to attached listeners.
 		 * 
 		 * Expects the following event parameters:
@@ -20406,6 +20480,30 @@ declare namespace sap.m {
 	}
 
 	interface NavContainerChild {
+		/**
+		 * This event is fired every time when the NavContainer has made this child control invisible. In case of animated transitions this
+		 * event is fired after the transition finishes. This control is now no longer being displayed and not animated anymore.
+		 */
+		AfterHide?: () => void;
+		/**
+		 * This event is fired every time when the NavContainer has made this child control visible. In case of animated transitions this
+		 * event is fired after the transition finishes. This control is now being displayed and not animated anymore.
+		 */
+		AfterShow?: () => void;
+		/**
+		 * This event is fired before the NavContainer shows this child control for the first time.
+		 */
+		BeforeFirstShow?: () => void;
+		/**
+		 * This event is fired every time before the NavContainer hides this child control. In case of animated transitions this
+		 * event is fired before the transition starts.
+		 */
+		BeforeHide?: () => void;
+		/**
+		 * This event is fired every time before the NavContainer shows this child control. In case of animated transitions this
+		 * event is fired before the transition starts.
+		 */
+		BeforeShow?: () => void;
 	}
 
 	class NewsContent extends sap.ui.core.Control {
@@ -32873,6 +32971,18 @@ declare namespace sap.m {
 		 */
 		extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
 		/**
+		 * Creates a new subclass of class sap.m.QuickViewBase with name <code>sClassName</code>
+		 * and enriches it with the information contained in <code>oClassInfo</code>.
+		 * 
+		 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Control.extend}.
+		 * @note Overload from base type sap.m.QuickViewBase
+		 * @param sClassName Name of the class being created
+		 * @param oClassInfo Object literal with information about the class(optional)
+		 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+		 * @return Created class / constructor function
+		 */
+		extend(sClassName: string, oClassInfo?: any|QuickViewBaseMetadata, FNMetaImpl?: any): any;
+		/**
 		 * Fires event <code>afterClose</code> to attached listeners.
 		 * 
 		 * Expects the following event parameters:
@@ -32972,7 +33082,7 @@ declare namespace sap.m {
 		 * @param sId ID for the new control, generated automatically if no ID is given(optional)
 		 * @param mSettings Initial settings for the new control(optional)
 		 */
-		constructor(sId?: string, mSettings?: any);
+		constructor(sId?: string, mSettings?: sap.m.QuickViewBaseMetadata);
 		/**
 		 * Constructor for a new QuickViewBase.
 		 * 
@@ -33063,6 +33173,56 @@ declare namespace sap.m {
 		 * @param oClassInfo Object literal with information about the class(optional)
 		 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 		 * @return Created class / constructor function
+		 */
+		extend(sClassName: string, oClassInfo?: any|QuickViewBaseMetadata, FNMetaImpl?: any): any;
+		/**
+		 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+		 * and enriches it with the information contained in <code>oClassInfo</code>.
+		 * 
+		 * <code>oClassInfo</code> might contain three kinds of informations:
+		 * <ul>
+		 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+		 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+		 * and might contain the following information
+		 * <ul>
+		 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+		 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+		 * facade of the class</li>
+		 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+		 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+		 * </ul>
+		 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+		 * </li>
+		 * 
+		 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+		 * If no constructor function is given, the framework creates a default implementation that delegates all
+		 * its arguments to the constructor function of the base class.
+		 * </li>
+		 * 
+		 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+		 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+		 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+		 * make sense to use primitive values here other than to declare public constants.
+		 * </li>
+		 * 
+		 * </ul>
+		 * 
+		 * The prototype object of the newly created class uses the same prototype as instances of the base class
+		 * (prototype chaining).
+		 * 
+		 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+		 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+		 * itself.
+		 * 
+		 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+		 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+		 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+		 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+		 * @note Overload from base type sap.ui.base.Object
+		 * @param sClassName name of the class to be created
+		 * @param oClassInfo structured object with informations about the class(optional)
+		 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+		 * @return the created class / constructor function
 		 */
 		extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 		/**
@@ -33269,6 +33429,18 @@ declare namespace sap.m {
 		 * @return Created class / constructor function
 		 */
 		extend(sClassName: string, oClassInfo?: any|sap.ui.core.ControlMetadata, FNMetaImpl?: any): any;
+		/**
+		 * Creates a new subclass of class sap.m.QuickViewBase with name <code>sClassName</code>
+		 * and enriches it with the information contained in <code>oClassInfo</code>.
+		 * 
+		 * <code>oClassInfo</code> might contain the same kind of information as described in {@link sap.ui.core.Control.extend}.
+		 * @note Overload from base type sap.m.QuickViewBase
+		 * @param sClassName Name of the class being created
+		 * @param oClassInfo Object literal with information about the class(optional)
+		 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
+		 * @return Created class / constructor function
+		 */
+		extend(sClassName: string, oClassInfo?: any|QuickViewBaseMetadata, FNMetaImpl?: any): any;
 		/**
 		 * Gets current value of property <code>showVerticalScrollBar</code>.
 		 * 
@@ -43358,6 +43530,10 @@ declare namespace sap.m {
 			 * @default true
 			 */
 			enabled?: boolean;
+			/**
+			 * See {@link sap.m.Button#press}
+			 */
+			press?: () => void;
 		}
 	
 		interface SemanticControlMetadata {
@@ -43404,6 +43580,10 @@ declare namespace sap.m {
 			 * @default false
 			 */
 			floatingFooter?: boolean;
+			/**
+			 * See {@link sap.m.Page#navButtonPress}
+			 */
+			navButtonPress?: () => void;
 		}
 	
 		interface SemanticSelectMetadata extends sap.m.semantic.SemanticControlMetadata {
@@ -43417,6 +43597,11 @@ declare namespace sap.m {
 			 * @default 
 			 */
 			selectedKey?: string;
+			/**
+			 * See {@link sap.m.Select#change}
+			 * @param selectedItem The selected item.
+			 */
+			change?: (selectedItem: sap.ui.core.Item) => void;
 		}
 	
 		interface SemanticToggleButtonMetadata extends sap.m.semantic.SemanticButtonMetadata {
@@ -56592,6 +56777,26 @@ declare namespace sap.m {
 		 * Title will be shown in the header area in iPhone and every Android devices. This property will be ignored in tablets and desktop browser.
 		 */
 		title?: string;
+		/**
+		 * This event will be fired before the ActionSheet is opened.
+		 */
+		beforeOpen?: () => void;
+		/**
+		 * This event will be fired after the ActionSheet is opened.
+		 */
+		afterOpen?: () => void;
+		/**
+		 * This event will be fired before the ActionSheet is closed.
+		 */
+		beforeClose?: () => void;
+		/**
+		 * This event will be fired after the ActionSheet is closed.
+		 */
+		afterClose?: () => void;
+		/**
+		 * This event is fired when the cancelButton is clicked. For iPad, this event is also fired when showCancelButton is set to true, and Popover is closed by clicking outside.
+		 */
+		cancelButtonPress?: () => void;
 	}
 
 	interface AppMetadata extends sap.m.NavContainerMetadata {
@@ -56709,6 +56914,12 @@ declare namespace sap.m {
 		 * @default false
 		 */
 		showCancelButton?: boolean;
+		/**
+		 * Fires when the busy dialog is closed.
+		 * @param cancelPressed Indicates if the close events are triggered by a user, pressing a cancel button or because the operation was terminated.
+		 * This parameter is set to true if the close event is fired by user interaction.
+		 */
+		close?: (cancelPressed: boolean) => void;
 	}
 
 	interface BusyIndicatorMetadata extends sap.ui.core.ControlMetadata {
@@ -56812,6 +57023,10 @@ declare namespace sap.m {
 		 * @default Inherit
 		 */
 		textDirection?: sap.ui.core.TextDirection;
+		/**
+		 * Event is fired when the user clicks on the control.
+		 */
+		press?: () => void;
 	}
 
 	interface CarouselMetadata extends sap.ui.core.ControlMetadata {
@@ -56840,6 +57055,12 @@ declare namespace sap.m {
 		 * @default Bottom
 		 */
 		pageIndicatorPlacement?: sap.m.PlacementType;
+		/**
+		 * This event is fired after a carousel swipe has been completed. It is triggered both by physical swipe events and through API carousel manipulations such as calling 'next', 'previous' or 'setActivePageId' functions.
+		 * @param oldActivePageId Id of the page which was active before the page change.
+		 * @param newActivePageId Id of the page which is active after the page change.
+		 */
+		pageChanged?: (oldActivePageId: string, newActivePageId: string) => void;
 	}
 
 	interface CheckBoxMetadata extends sap.ui.core.ControlMetadata {
@@ -56891,6 +57112,11 @@ declare namespace sap.m {
 		 * @default None
 		 */
 		valueState?: sap.ui.core.ValueState;
+		/**
+		 * Event is triggered when the control status is changed by the user by selecting or deselecting the checkbox.
+		 * @param selected Checks whether the CheckBox is marked or not .
+		 */
+		select?: (selected: boolean) => void;
 	}
 
 	interface ColumnMetadata {
@@ -56968,7 +57194,7 @@ declare namespace sap.m {
 		vAlign?: sap.ui.core.VerticalAlign;
 	}
 
-	interface ComboBoxMetadata {
+	interface ComboBoxMetadata extends sap.m.ComboBoxBaseMetadata {
 		/**
 		 * Key of the selected item.
 		 * 
@@ -56987,6 +57213,29 @@ declare namespace sap.m {
 		 * @default false
 		 */
 		showSecondaryValues?: boolean;
+		/**
+		 * This event is fired when the user types something that matches with an item in the list;
+		 * it is also fired when the user presses on a list item, or when navigating via keyboard.
+		 * @param selectedItem The selected item.
+		 */
+		selectionChange?: (selectedItem: sap.ui.core.Item) => void;
+	}
+
+	interface ComboBoxBaseMetadata extends sap.m.ComboBoxTextFieldMetadata {
+		/**
+		 * This event is fired when the end user moves the cursor to the text field, performs
+		 * an action that requires items to be loaded, and items are not already loaded. For example,
+		 * pressing F4 to open the dropdown list or typing something in the text field fires the event.
+		 * 
+		 * <b>Note:</b> We strongly recommend to only use this feature in performance critical scenarios.
+		 * Loading the items lazily (on demand) to defer initialization has several implications for the end user
+		 * experience. For example, the busy indicator has to be shown while the items are being loaded and
+		 * assistive technology software also has to announce the state changes (which may be confusing
+		 * for some screen reader users).
+		 * 
+		 * <b>Note</b>: Currently the <code>sap.m.MultiComboBox</code> does not support this event.
+		 */
+		loadItems?: () => void;
 	}
 
 	interface ComboBoxTextFieldMetadata extends sap.m.InputBaseMetadata {
@@ -57132,6 +57381,24 @@ declare namespace sap.m {
 		 * @default false
 		 */
 		draggable?: boolean;
+		/**
+		 * This event will be fired before the dialog is opened.
+		 */
+		beforeOpen?: () => void;
+		/**
+		 * This event will be fired after the dialog is opened.
+		 */
+		afterOpen?: () => void;
+		/**
+		 * This event will be fired before the dialog is closed.
+		 * @param origin This indicates the trigger of closing the dialog. If dialog is closed by either leftButton or rightButton, the button that closes the dialog is set to this parameter. Otherwise this parameter is set to null.
+		 */
+		beforeClose?: (origin: sap.m.Button) => void;
+		/**
+		 * This event will be fired after the dialog is closed.
+		 * @param origin This indicates the trigger of closing the dialog. If dialog is closed by either leftButton or rightButton, the button that closes the dialog is set to this parameter. Otherwise this parameter is set to null.
+		 */
+		afterClose?: (origin: sap.m.Button) => void;
 	}
 
 	interface DisplayListItemMetadata extends sap.m.ListItemBaseMetadata {
@@ -57194,6 +57461,14 @@ declare namespace sap.m {
 		 * @default false
 		 */
 		showPopoverOKButton?: boolean;
+		/**
+		 * Fired when the Reset button is pressed to inform that all FacetFilterLists need to be reset.
+		 */
+		reset?: () => void;
+		/**
+		 * Fired when the user confirms filter selection.
+		 */
+		confirm?: () => void;
 	}
 
 	interface FacetFilterItemMetadata extends sap.m.ListItemBaseMetadata {
@@ -57255,6 +57530,17 @@ declare namespace sap.m {
 		 * @default String
 		 */
 		dataType?: sap.m.FacetFilterListDataType;
+		/**
+		 * Fired before the filter list is opened.
+		 */
+		listOpen?: () => void;
+		/**
+		 * Triggered after the list of items is closed.
+		 * @param selectedItems Array of selected items. Items returned are only copies and therefore can only be used to read properties, not set them.
+		 * @param allSelected <code>True</code> if the select All checkbox is selected. This will be <code>false</code> if all items are actually selected (every FacetFilterItem.selected == true). In that case selectedItems will contain all selected items.
+		 * @param selectedKeys Associative array containing the keys of selected FacetFilterItems. Unlike the selectedItems parameter, this contains only the keys for all selected items, not the items themselves. Being an associative array, each object property is the FacetFilterItem key value and the value of the property is the FacetFilterItem text.
+		 */
+		listClose?: (selectedItems: sap.m.FacetFilterItem[], allSelected: boolean, selectedKeys: any) => void;
 	}
 
 	interface FeedContentMetadata extends sap.ui.core.ControlMetadata {
@@ -57279,6 +57565,10 @@ declare namespace sap.m {
 		 * @default 4
 		 */
 		truncateValueTo?: number;
+		/**
+		 * The event is fired when the user chooses the feed content.
+		 */
+		press?: () => void;
 	}
 
 	interface FeedInputMetadata extends sap.ui.core.ControlMetadata {
@@ -57333,6 +57623,11 @@ declare namespace sap.m {
 		 * If a new ariaLabelForPicture is set, any previously set ariaLabelForPicture is deactivated.
 		 */
 		ariaLabelForPicture?: string;
+		/**
+		 * The Post event is triggered when the user has entered a value and pressed the post button. After firing this event, the value is reset.
+		 * @param value The value of the feed input before reseting it.
+		 */
+		post?: (value: string) => void;
 	}
 
 	interface FeedListItemMetadata extends sap.m.ListItemBaseMetadata {
@@ -57387,6 +57682,20 @@ declare namespace sap.m {
 		 * The expand and collapse feature is set by default and uses 300 characters on mobile devices and 500 characters on desktops as limits. Based on these values, the text of the FeedListItem is collapsed once text reaches these limits. In this case, only the specified number of characters is displayed. By clicking on the text link More, the entire text can be displayed. The text link Less collapses the text. The application is able to set the value to its needs.
 		 */
 		maxCharacters?: number;
+		/**
+		 * Event is fired when name of the sender is pressed.
+		 * @param domRef Dom reference of the feed item's sender string to be used for positioning.
+		 * @param getDomRef Function to retrieve the DOM reference for the <code>senderPress</code> event.
+		 * The function returns the DOM element of the sender link or null
+		 */
+		senderPress?: (domRef: string, getDomRef: any) => void;
+		/**
+		 * Event is fired when the icon is pressed.
+		 * @param domRef Dom reference of the feed item's icon to be used for positioning.
+		 * @param getDomRef Function to retrieve the DOM reference for the <code>iconPress</code> event.
+		 * The function returns the DOM element of the icon or null
+		 */
+		iconPress?: (domRef: string, getDomRef: any) => void;
 	}
 
 	interface FlexBoxMetadata extends sap.ui.core.ControlMetadata {
@@ -57591,6 +57900,10 @@ declare namespace sap.m {
 		 * Description of a header image that is used in the tooltip.
 		 */
 		imageDescription?: string;
+		/**
+		 * The event is fired when the user chooses the tile.
+		 */
+		press?: () => void;
 	}
 
 	interface GroupHeaderListItemMetadata extends sap.m.ListItemBaseMetadata {
@@ -57665,6 +57978,20 @@ declare namespace sap.m {
 		 * @default Standard
 		 */
 		headerMode?: sap.m.IconTabHeaderMode;
+		/**
+		 * Fires when an item is selected.
+		 * @param item The selected item
+		 * @param key The key of the selected item
+		 * @param selectedItem The selected item
+		 * @param selectedKey The key of the selected item
+		 */
+		select?: (item: sap.m.IconTabFilter, key: string, selectedItem: sap.m.IconTabFilter, selectedKey: string) => void;
+		/**
+		 * Indicates that the tab will expand or collapse.
+		 * @param expand If the tab will expand, this is true.
+		 * @param collapse If the tab will collapse, this is true.
+		 */
+		expand?: (expand: boolean, collapse: boolean) => void;
 	}
 
 	interface IconTabFilterMetadata extends sap.ui.core.ItemMetadata {
@@ -57733,6 +58060,12 @@ declare namespace sap.m {
 		 * @default Standard
 		 */
 		mode?: sap.m.IconTabHeaderMode;
+		/**
+		 * Fires when an item is selected.
+		 * @param item The selected item
+		 * @param key The key of the selected item
+		 */
+		select?: (item: sap.m.IconTabFilter, key: string) => void;
 	}
 
 	interface IconTabSeparatorMetadata {
@@ -57816,6 +58149,22 @@ declare namespace sap.m {
 		 * @default no-repeat
 		 */
 		backgroundRepeat?: string;
+		/**
+		 * Event is fired when the user clicks on the control. (This event is deprecated, use the press event instead)
+		 */
+		tap?: () => void;
+		/**
+		 * Event is fired when the user clicks on the control.
+		 */
+		press?: () => void;
+		/**
+		 * Event is fired when the image resource is loaded.
+		 */
+		load?: () => void;
+		/**
+		 * Event is fired when the image resource can't be loaded. If densityAware is set to true, the event is fired when none of the fallback resources can be loaded.
+		 */
+		error?: () => void;
 	}
 
 	interface ImageContentMetadata extends sap.ui.core.ControlMetadata {
@@ -57827,6 +58176,10 @@ declare namespace sap.m {
 		 * Description of image. This text is used to provide ScreenReader information.
 		 */
 		description?: string;
+		/**
+		 * The event is fired when the user chooses the image content.
+		 */
+		press?: () => void;
 	}
 
 	interface InputMetadata extends sap.m.InputBaseMetadata {
@@ -57899,6 +58252,40 @@ declare namespace sap.m {
 		 * @default false
 		 */
 		valueLiveUpdate?: boolean;
+		/**
+		 * This event is fired when the value of the input is changed - e.g. at each keypress
+		 * @param value The new value of the input.
+		 */
+		liveChange?: (value: string) => void;
+		/**
+		 * When the value help indicator is clicked, this event will be fired.
+		 * @param fromSuggestions The event parameter is set to true, when the button at the end of the suggestion table is clicked, otherwise false. It can be used to determine whether the "value help" trigger or the "show all items" trigger has been pressed.
+		 */
+		valueHelpRequest?: (fromSuggestions: boolean) => void;
+		/**
+		 * This event is fired when user types in the input and showSuggestion is set to true. Changing the suggestItems aggregation will show the suggestions within a popup.
+		 * @param suggestValue The current value which has been typed in the input.
+		 * @param suggestionColumns The suggestion list is passed to this event for convenience. If you use list-based or tabular suggestions, fill the suggestionList with the items you want to suggest. Otherwise, directly add the suggestions to the "suggestionItems" aggregation of the input control.
+		 */
+		suggest?: (suggestValue: string, suggestionColumns: sap.m.ListBase) => void;
+		/**
+		 * This event is fired when suggestionItem shown in suggestion popup are selected. This event is only fired when showSuggestion is set to true and there are suggestionItems shown in the suggestion popup.
+		 * @param selectedItem This is the item selected in the suggestion popup for one and two-value suggestions. For tabular suggestions, this value will not be set.
+		 * @param selectedRow This is the row selected in the tabular suggestion popup represented as a ColumnListItem. For one and two-value suggestions, this value will not be set.
+		 * 
+		 * Note: The row result function to select a result value for the string is already executed at this time. To pick different value for the input field or to do follow up steps after the item has been selected.
+		 */
+		suggestionItemSelected?: (selectedItem: sap.ui.core.Item, selectedRow: sap.m.ColumnListItem) => void;
+		/**
+		 * This event is fired when user presses the <code>Enter</code> key on the input.
+		 * 
+		 * <b>Note:</b>
+		 * The event is fired independent of whether there was a change before or not. If a change was performed the event is fired after the change event.
+		 * The event is also fired when an item of the select list is selected via <code>Enter</code>.
+		 * The event is only fired on an input which allows text input (<code>editable</code>, <code>enabled</code> and not <code>valueHelpOnly</code>).
+		 * @param value The new value of the input.
+		 */
+		submit?: (value: string) => void;
 	}
 
 	interface InputBaseMetadata extends sap.ui.core.ControlMetadata {
@@ -57961,6 +58348,11 @@ declare namespace sap.m {
 		 * @default false
 		 */
 		required?: boolean;
+		/**
+		 * Is fired when the text in the input field has changed and the focus leaves the input field or the enter key is pressed.
+		 * @param value The new <code>value</code> of the <code>control</code>.
+		 */
+		change?: (value: string) => void;
 	}
 
 	interface InputListItemMetadata extends sap.m.ListItemBaseMetadata {
@@ -58055,6 +58447,10 @@ declare namespace sap.m {
 		 * @default false
 		 */
 		emphasized?: boolean;
+		/**
+		 * Event is fired when the user triggers the link control.
+		 */
+		press?: () => void;
 	}
 
 	interface ListMetadata extends sap.m.ListBaseMetadata {
@@ -58172,6 +58568,48 @@ declare namespace sap.m {
 		 * @default Navigation
 		 */
 		keyboardMode?: sap.m.ListKeyboardMode;
+		/**
+		 * Fires when selection is changed via user interaction inside the control.
+		 * @param listItem The item whose selection has changed. In <code>MultiSelect</code> mode, only the up-most selected item is returned. This parameter can be used for single-selection modes.
+		 * @param listItems Array of items whose selection has changed. This parameter can be used for <code>MultiSelect</code> mode.
+		 * @param selected Indicates whether the <code>listItem</code> parameter is selected or not.
+		 */
+		selectionChange?: (listItem: sap.m.ListItemBase, listItems: sap.m.ListItemBase[], selected: boolean) => void;
+		/**
+		 * Fires when delete icon is pressed by user.
+		 * @param listItem The item which fired the delete event.
+		 */
+		delete?: (listItem: sap.m.ListItemBase) => void;
+		/**
+		 * Fires after user's swipe action and before the <code>swipeContent</code> is shown. On the <code>swipe</code> event handler, <code>swipeContent</code> can be changed according to the swiped item.
+		 * Calling the <code>preventDefault</code> method of the event cancels the swipe action.
+		 * @param listItem The item which fired the swipe.
+		 * @param swipeContent Aggregated <code>swipeContent</code> control that is shown on the right hand side of the item.
+		 * @param srcControl Holds which control caused the swipe event within the item.
+		 */
+		swipe?: (listItem: sap.m.ListItemBase, swipeContent: sap.ui.core.Control, srcControl: sap.ui.core.Control) => void;
+		/**
+		 * Fires before <code>items</code> binding is updated (e.g. sorting, filtering)
+		 * 
+		 * <b>Note:</b> Event handler should not invalidate the control.
+		 * @param reason The reason of the update, e.g. Binding, Filter, Sort, Growing, Change, Refresh, Context.
+		 * @param actual Actual number of items.
+		 * @param total The total count of bound items. This can be used if the <code>growing</code> property is set to <code>true</code>.
+		 */
+		updateStarted?: (reason: string, actual: number, total: number) => void;
+		/**
+		 * Fires after <code>items</code> binding is updated and processed by the control.
+		 * @param reason The reason of the update, e.g. Binding, Filter, Sort, Growing, Change, Refresh, Context.
+		 * @param actual Actual number of items.
+		 * @param total The total count of bound items. This can be used if the <code>growing</code> property is set to <code>true</code>.
+		 */
+		updateFinished?: (reason: string, actual: number, total: number) => void;
+		/**
+		 * Fires when an item is pressed unless the item's <code>type</code> property is <code>Inactive</code>.
+		 * @param listItem The item which fired the pressed event.
+		 * @param srcControl The control which caused the press event within the container.
+		 */
+		itemPress?: (listItem: sap.m.ListItemBase, srcControl: sap.ui.core.Control) => void;
 	}
 
 	interface ListItemBaseMetadata extends sap.ui.core.ControlMetadata {
@@ -58201,6 +58639,17 @@ declare namespace sap.m {
 		 * Defines the counter value of the list items.
 		 */
 		counter?: number;
+		/**
+		 * Fires when the user clicks on the control.
+		 * <b>Note:</b> This event is not fired when the parent <code>mode</code> is <code>SingleSelectMaster</code> or when the <code>includeItemInSelection</code> property is set to <code>true</code>.
+		 * If there is an interactive element that handles its own <code>press</code> event then the list item's <code>press</code> event is not fired.
+		 * Also see {@link sap.m.ListBase#attachItemPress}.
+		 */
+		press?: () => void;
+		/**
+		 * Fires when the user clicks on the detail button of the control.
+		 */
+		detailPress?: () => void;
 	}
 
 	interface MaskInputMetadata extends sap.m.InputBaseMetadata {
@@ -58240,6 +58689,15 @@ declare namespace sap.m {
 		 * Defines the <code>Menu</code> title.
 		 */
 		title?: string;
+		/**
+		 * Fired when a <code>MenuItem</code> is selected.
+		 * @param item The <code>MenuItem</code> which was selected.
+		 */
+		itemSelected?: (item: sap.m.MenuItem) => void;
+		/**
+		 * Fired when the menu is closed.
+		 */
+		closed?: () => void;
 	}
 
 	interface MenuButtonMetadata extends sap.ui.core.ControlMetadata {
@@ -58301,6 +58759,12 @@ declare namespace sap.m {
 		 * @default false
 		 */
 		useDefaultActionOnly?: boolean;
+		/**
+		 * Fired when the <code>buttonMode</code> is set to <code>Split</code> and the user presses the main button
+		 * unless <code>useDefaultActionOnly</code> is set to <code>false</code> and another action
+		 * from the menu has been selected previously.
+		 */
+		defaultAction?: () => void;
 	}
 
 	interface MenuItemMetadata extends sap.ui.core.ItemMetadata {
@@ -58321,6 +58785,23 @@ declare namespace sap.m {
 		 * @default false
 		 */
 		startsSection?: boolean;
+		/**
+		 * Fired after the item has been pressed.
+		 */
+		press?: () => void;
+		/**
+		 * Fired when a property of the item changes.
+		 * @param propertyKey The property name to be changed.
+		 * @param propertyValue The new property value.
+		 */
+		propertyChanged?: (propertyKey: string, propertyValue: any) => void;
+		/**
+		 * Fired when aggregation of the item changes.
+		 * @param aggregationName The aggregation name of the changed aggregation.
+		 * @param methodName Which method changed the aggregation.
+		 * @param methodParams What parameters were used to change the aggregation.
+		 */
+		aggregationChanged?: (aggregationName: string, methodName: string, methodParams: any) => void;
 	}
 
 	interface MessagePageMetadata extends sap.ui.core.ControlMetadata {
@@ -58359,6 +58840,10 @@ declare namespace sap.m {
 		 * @default Inherit
 		 */
 		textDirection?: sap.ui.core.TextDirection;
+		/**
+		 * This event is fired when Nav Button is pressed.
+		 */
+		navButtonPress?: () => void;
 	}
 
 	interface MessagePopoverMetadata extends sap.ui.core.ControlMetadata {
@@ -58381,6 +58866,47 @@ declare namespace sap.m {
 		 * @default true
 		 */
 		initiallyExpanded?: boolean;
+		/**
+		 * This event will be fired after the popover is opened
+		 * @param openBy This refers to the control which opens the popover
+		 */
+		afterOpen?: (openBy: sap.ui.core.Control) => void;
+		/**
+		 * This event will be fired after the popover is closed
+		 * @param openBy Refers to the control which opens the popover
+		 */
+		afterClose?: (openBy: sap.ui.core.Control) => void;
+		/**
+		 * This event will be fired before the popover is opened
+		 * @param openBy Refers to the control which opens the popover
+		 */
+		beforeOpen?: (openBy: sap.ui.core.Control) => void;
+		/**
+		 * This event will be fired before the popover is closed
+		 * @param openBy Refers to the control which opens the popover
+		 * See sap.ui.core.MessageType enum values for types
+		 */
+		beforeClose?: (openBy: sap.ui.core.Control) => void;
+		/**
+		 * This event will be fired when description is shown
+		 * @param item Refers to the message popover item that is being presented
+		 * @param messageTypeFilter Refers to the type of messages being shown
+		 * See sap.ui.core.MessageType values for types
+		 */
+		itemSelect?: (item: sap.m.MessagePopoverItem, messageTypeFilter: sap.ui.core.MessageType) => void;
+		/**
+		 * This event will be fired when one of the lists is shown when (not) filtered  by type
+		 * @param messageTypeFilter This parameter refers to the type of messages being shown.
+		 */
+		listSelect?: (messageTypeFilter: sap.ui.core.MessageType) => void;
+		/**
+		 * This event will be fired when the long text description data from a remote URL is loaded
+		 */
+		longtextLoaded?: () => void;
+		/**
+		 * This event will be fired when a validation of a URL from long text description is ready
+		 */
+		urlValidated?: () => void;
 	}
 
 	interface MessagePopoverItemMetadata {
@@ -58448,14 +58974,31 @@ declare namespace sap.m {
 		 * @default false
 		 */
 		showCloseButton?: boolean;
+		/**
+		 * This event will be fired after the container is closed.
+		 */
+		close?: () => void;
 	}
 
-	interface MultiComboBoxMetadata {
+	interface MultiComboBoxMetadata extends sap.m.ComboBoxBaseMetadata {
 		/**
 		 * Keys of the selected items. If the key has no corresponding item, no changes will apply. If duplicate keys exists the first item matching the key is used.
 		 * @default []
 		 */
 		selectedKeys?: string[];
+		/**
+		 * Event is fired when selection of an item is changed.
+		 * Note: please do not use the "change" event inherited from sap.m.InputBase
+		 * @param changedItem Item which selection is changed
+		 * @param selected Selection state: true if item is selected, false if
+		 * item is not selected
+		 */
+		selectionChange?: (changedItem: sap.ui.core.Item, selected: boolean) => void;
+		/**
+		 * Event is fired when user has finished a selection of items in a list box and list box has been closed.
+		 * @param selectedItems The selected items which are selected after list box has been closed.
+		 */
+		selectionFinish?: (selectedItems: sap.ui.core.Item[]) => void;
 	}
 
 	interface MultiInputMetadata extends sap.m.InputMetadata {
@@ -58470,6 +59013,21 @@ declare namespace sap.m {
 		 * The max number of tokens that is allowed in MultiInput.
 		 */
 		maxTokens?: number;
+		/**
+		 * Fired when the tokens aggregation changed (add / remove token)
+		 * @param type Type of tokenChange event.
+		 * There are four TokenChange types: "added", "removed", "removedAll", "tokensChanged".
+		 * Use Tokenizer.TokenChangeType.Added for "added",	Tokenizer.TokenChangeType.Removed for "removed", Tokenizer.TokenChangeType.RemovedAll for "removedAll" and Tokenizer.TokenChangeType.TokensChanged for "tokensChanged".
+		 * @param token The added token or removed token.
+		 * This parameter is used when tokenChange type is "added" or "removed".
+		 * @param tokens The array of removed tokens.
+		 * This parameter is used when tokenChange type is "removedAll".
+		 * @param addedTokens The array of tokens that are added.
+		 * This parameter is used when tokenChange type is "tokenChanged".
+		 * @param removedTokens The array of tokens that are removed.
+		 * This parameter is used when tokenChange type is "tokenChanged".
+		 */
+		tokenChange?: (type: string, token: sap.m.Token, tokens: sap.m.Token[], addedTokens: sap.m.Token[], removedTokens: sap.m.Token[]) => void;
 	}
 
 	interface NavContainerMetadata extends sap.ui.core.ControlMetadata {
@@ -58500,6 +59058,35 @@ declare namespace sap.m {
 		 * @default slide
 		 */
 		defaultTransitionName?: string;
+		/**
+		 * The event is fired when navigation between two pages has been triggered. The transition (if any) to the new page has not started yet.
+		 * This event can be aborted by the application with preventDefault(), which means that there will be no navigation.
+		 * @param from The page which was shown before the current navigation.
+		 * @param fromId The ID of the page which was shown before the current navigation.
+		 * @param to The page which will be shown after the current navigation.
+		 * @param toId The ID of the page which will be shown after the current navigation.
+		 * @param firstTime Whether the "to" page (more precisely: a control with the ID of the page which is currently navigated to) has not been shown/navigated to before.
+		 * @param isTo Whether this is a forward navigation, triggered by "to()".
+		 * @param isBack Whether this is a back navigation, triggered by "back()".
+		 * @param isBackToTop Whether this is a navigation to the root page, triggered by "backToTop()".
+		 * @param isBackToPage Whether this was a navigation to a specific page, triggered by "backToPage()".
+		 * @param direction How the navigation was triggered, possible values are "to", "back", "backToPage", and "backToTop".
+		 */
+		navigate?: (from: sap.ui.core.Control, fromId: string, to: sap.ui.core.Control, toId: string, firstTime: boolean, isTo: boolean, isBack: boolean, isBackToTop: boolean, isBackToPage: boolean, direction: string) => void;
+		/**
+		 * The event is fired when navigation between two pages has completed. In case of animated transitions this event is fired with some delay after the "navigate" event.
+		 * @param from The page which had been shown before navigation.
+		 * @param fromId The ID of the page which had been shown before navigation.
+		 * @param to The page which is now shown after navigation.
+		 * @param toId The ID of the page which is now shown after navigation.
+		 * @param firstTime Whether the "to" page (more precisely: a control with the ID of the page which has been navigated to) had not been shown/navigated to before.
+		 * @param isTo Whether was a forward navigation, triggered by "to()".
+		 * @param isBack Whether this was a back navigation, triggered by "back()".
+		 * @param isBackToTop Whether this was a navigation to the root page, triggered by "backToTop()".
+		 * @param isBackToPage Whether this was a navigation to a specific page, triggered by "backToPage()".
+		 * @param direction How the navigation was triggered, possible values are "to", "back", "backToPage", and "backToTop".
+		 */
+		afterNavigate?: (from: sap.ui.core.Control, fromId: string, to: sap.ui.core.Control, toId: string, firstTime: boolean, isTo: boolean, isBack: boolean, isBackToTop: boolean, isBackToPage: boolean, direction: string) => void;
 	}
 
 	interface NewsContentMetadata extends sap.ui.core.ControlMetadata {
@@ -58511,6 +59098,10 @@ declare namespace sap.m {
 		 * The subheader.
 		 */
 		subheader?: string;
+		/**
+		 * The event is fired when the user chooses the news content.
+		 */
+		press?: () => void;
 	}
 
 	interface NotificationListBaseMetadata extends sap.m.ListItemBaseMetadata {
@@ -58548,6 +59139,10 @@ declare namespace sap.m {
 		 * Determines the URL of the notification group's author picture.
 		 */
 		authorPicture?: sap.ui.core.URI;
+		/**
+		 * Fired when the close button of the notification is pressed.<br><b>Note:</b> Pressing the close button doesn't destroy the notification automatically.
+		 */
+		close?: () => void;
 	}
 
 	interface NotificationListGroupMetadata extends sap.m.NotificationListBaseMetadata {
@@ -58647,6 +59242,10 @@ declare namespace sap.m {
 		 * @default Loaded
 		 */
 		state?: sap.m.LoadState;
+		/**
+		 * The event is fired when the user chooses the numeric content.
+		 */
+		press?: () => void;
 	}
 
 	interface ObjectAttributeMetadata extends sap.ui.core.ControlMetadata {
@@ -58668,6 +59267,11 @@ declare namespace sap.m {
 		 * @default Inherit
 		 */
 		textDirection?: sap.ui.core.TextDirection;
+		/**
+		 * Fires when the user clicks on active text.
+		 * @param domRef DOM reference of the ObjectAttribute's text to be used for positioning.
+		 */
+		press?: (domRef: string) => void;
 	}
 
 	interface ObjectHeaderMetadata extends sap.ui.core.ControlMetadata {
@@ -58829,6 +59433,26 @@ declare namespace sap.m {
 		 * @default H1
 		 */
 		titleLevel?: sap.ui.core.TitleLevel;
+		/**
+		 * Event is fired when the title is active and the user taps/clicks on it
+		 * @param domRef Dom reference of the object header' title to be used for positioning.
+		 */
+		titlePress?: (domRef: any) => void;
+		/**
+		 * Event is fired when the intro is active and the user taps/clicks on it
+		 * @param domRef Dom reference of the object header' intro to be used for positioning.
+		 */
+		introPress?: (domRef: any) => void;
+		/**
+		 * Event is fired when the title icon is active and the user taps/clicks on it
+		 * @param domRef Dom reference of the object header' icon to be used for positioning.
+		 */
+		iconPress?: (domRef: any) => void;
+		/**
+		 * Event is fired when the object header title selector (down-arrow) is pressed
+		 * @param domRef Dom reference of the object header' titleArrow to be used for positioning.
+		 */
+		titleSelectorPress?: (domRef: any) => void;
 	}
 
 	interface ObjectIdentifierMetadata extends sap.ui.core.ControlMetadata {
@@ -58855,6 +59479,11 @@ declare namespace sap.m {
 		 * @default Inherit
 		 */
 		textDirection?: sap.ui.core.TextDirection;
+		/**
+		 * Fires when the title is active and the user taps/clicks on it.
+		 * @param domRef DOM reference of the object identifier's title.
+		 */
+		titlePress?: (domRef: any) => void;
 	}
 
 	interface ObjectListItemMetadata extends sap.m.ListItemBaseMetadata {
@@ -58956,6 +59585,10 @@ declare namespace sap.m {
 		 * </ul>
 		 */
 		visibility?: sap.m.ObjectMarkerVisibility;
+		/**
+		 * Event is fired when the <code>ObjectMarker</code> is interactive and the user taps/clicks on it.
+		 */
+		press?: () => void;
 	}
 
 	interface ObjectNumberMetadata extends sap.ui.core.ControlMetadata {
@@ -59083,6 +59716,22 @@ declare namespace sap.m {
 		 * @default -1
 		 */
 		visibleItemsThreshold?: number;
+		/**
+		 * Event raised when a <code>columnsItem</code> is added.
+		 * @param newItem <code>columnsItem</code> that needs to be added in the model.
+		 */
+		addColumnsItem?: (newItem: sap.m.P13nColumnsItem) => void;
+		/**
+		 * Event raised if <code>columnsItems</code> is changed or new one needs to be created in the model.
+		 * @param newItems Contains <code>columnsItems</code> that needs to be created in the model.
+		 * @param existingItems Contains <code>columnsItems</code> that needs to be changed in the model.
+		 */
+		changeColumnsItems?: (newItems: sap.m.P13nColumnsItem[], existingItems: sap.m.P13nColumnsItem[]) => void;
+		/**
+		 * Event raised if <code>setData</code> is called in model. The event serves the purpose of minimizing such calls since they can
+		 * take up a lot of performance.
+		 */
+		setData?: () => void;
 	}
 
 	interface P13nConditionPanelMetadata extends sap.ui.core.ControlMetadata {
@@ -59149,6 +59798,10 @@ declare namespace sap.m {
 		 * Calls the validation listener tbd...
 		 */
 		validationExecutor?: any;
+		/**
+		 * Workaround for updating the binding
+		 */
+		dataChange?: () => void;
 	}
 
 	interface P13nDialogMetadata extends sap.m.DialogMetadata {
@@ -59174,6 +59827,18 @@ declare namespace sap.m {
 		 * to perform cross-model validation checks.
 		 */
 		validationExecutor?: any;
+		/**
+		 * Event fired if the 'ok' button in P13nDialog is clicked.
+		 */
+		ok?: () => void;
+		/**
+		 * Event fired if the 'cancel' button in P13nDialog is clicked.
+		 */
+		cancel?: () => void;
+		/**
+		 * Event fired if the 'reset' button in P13nDialog is clicked.
+		 */
+		reset?: () => void;
 	}
 
 	interface P13nDimMeasureItemMetadata extends sap.ui.core.ItemMetadata {
@@ -59250,6 +59915,18 @@ declare namespace sap.m {
 		 * or"Phone" you can set a fixed layout.
 		 */
 		layoutMode?: string;
+		/**
+		 * Event raised if a filter item has been added.
+		 */
+		addFilterItem?: () => void;
+		/**
+		 * Removes a filter item.
+		 */
+		removeFilterItem?: () => void;
+		/**
+		 * Updates a filter item.
+		 */
+		updateFilterItem?: () => void;
 	}
 
 	interface P13nGroupItemMetadata extends sap.ui.core.ItemMetadata {
@@ -59285,6 +59962,18 @@ declare namespace sap.m {
 		 * or"Phone" you can set a fixed layout.
 		 */
 		layoutMode?: string;
+		/**
+		 * Event raised if a <code>GroupItem</code> has been added.
+		 */
+		addGroupItem?: () => void;
+		/**
+		 * Removes a group item.
+		 */
+		removeGroupItem?: () => void;
+		/**
+		 * Updates a group item.
+		 */
+		updateGroupItem?: () => void;
 	}
 
 	interface P13nItemMetadata extends sap.ui.core.ItemMetadata {
@@ -59373,6 +60062,10 @@ declare namespace sap.m {
 		 * Callback which notifies a change on this panel.
 		 */
 		changeNotifier?: any;
+		/**
+		 * Due to performance the data of the panel can be requested in lazy mode e.g. when the panel is displayed
+		 */
+		beforeNavigationTo?: () => void;
 	}
 
 	interface P13nSortItemMetadata extends sap.ui.core.ItemMetadata {
@@ -59398,6 +60091,18 @@ declare namespace sap.m {
 		 * or"Phone" you can set a fixed layout.
 		 */
 		layoutMode?: string;
+		/**
+		 * event raised when a SortItem was added
+		 */
+		addSortItem?: () => void;
+		/**
+		 * remove a sort item
+		 */
+		removeSortItem?: () => void;
+		/**
+		 * update a sort item
+		 */
+		updateSortItem?: () => void;
 	}
 
 	interface PageMetadata extends sap.ui.core.ControlMetadata {
@@ -59462,6 +60167,10 @@ declare namespace sap.m {
 		 * @default false
 		 */
 		floatingFooter?: boolean;
+		/**
+		 * this event is fired when Nav Button is pressed
+		 */
+		navButtonPress?: () => void;
 	}
 
 	interface PageAccessibleLandmarkInfoMetadata {
@@ -59559,6 +60268,12 @@ declare namespace sap.m {
 		 * @default 
 		 */
 		previousButtonTooltip?: string;
+		/**
+		 * Fired when the current position is changed.
+		 * @param newPosition The number of the new position.
+		 * @param oldPosition The number of the old position.
+		 */
+		positionChange?: (newPosition: number, oldPosition: number) => void;
 	}
 
 	interface PanelMetadata extends sap.ui.core.ControlMetadata {
@@ -59605,6 +60320,12 @@ declare namespace sap.m {
 		 * @default Translucent
 		 */
 		backgroundDesign?: sap.m.BackgroundDesign;
+		/**
+		 * Indicates that the panel will expand or collapse
+		 * @param expand If the panel will expand, this is true.
+		 * If the panel will collapse, this is false.
+		 */
+		expand?: (expand: boolean) => void;
 	}
 
 	interface PlanningCalendarMetadata extends sap.ui.core.ControlMetadata {
@@ -59687,6 +60408,35 @@ declare namespace sap.m {
 		 * the <code>minDate</code> is set to the begin of the month of the <code>maxDate</code>.
 		 */
 		maxDate?: any;
+		/**
+		 * Fired if an appointment was selected
+		 * @param appointment Selected appointment
+		 * @param appointments Selected appointments in case a group appointment is selected
+		 * @param multiSelect If set, the appointment was selected using multiple selection (e.g. Shift + single mouse click),
+		 * meaning more than the current appointment could be selected.
+		 */
+		appointmentSelect?: (appointment: sap.ui.unified.CalendarAppointment, appointments: sap.ui.unified.CalendarAppointment[], multiSelect: boolean) => void;
+		/**
+		 * Fired if an interval was selected in the header calendar or in the row
+		 * @param startDate Start date of the selected interval, as JavaScript date object.
+		 * @param endDate Interval end date as JavaScript date object
+		 * @param subInterval If set, the selected interval is a subinterval
+		 * @param row Row of the selected interval
+		 */
+		intervalSelect?: (startDate: any, endDate: any, subInterval: boolean, row: sap.m.PlanningCalendarRow) => void;
+		/**
+		 * Fires when row selection is changed
+		 * @param rows Array of rows whose selection has changed.
+		 */
+		rowSelectionChange?: (rows: sap.m.PlanningCalendarRow[]) => void;
+		/**
+		 * <code>startDate</code> was changed while navigating in <code>PlanningCalendar</code>
+		 */
+		startDateChange?: () => void;
+		/**
+		 * <code>viewKey</code> was changed by user interaction
+		 */
+		viewChange?: () => void;
 	}
 
 	interface PlanningCalendarRowMetadata {
@@ -59849,6 +60599,26 @@ declare namespace sap.m {
 		 * @default false
 		 */
 		resizable?: boolean;
+		/**
+		 * This event will be fired after the popover is opened.
+		 * @param openBy This refers to the control which opens the popover.
+		 */
+		afterOpen?: (openBy: sap.ui.core.Control) => void;
+		/**
+		 * This event will be fired after the popover is closed.
+		 * @param openBy This refers to the control which opens the popover.
+		 */
+		afterClose?: (openBy: sap.ui.core.Control) => void;
+		/**
+		 * This event will be fired before the popover is opened.
+		 * @param openBy This refers to the control which opens the popover.
+		 */
+		beforeOpen?: (openBy: sap.ui.core.Control) => void;
+		/**
+		 * This event will be fired before the popover is closed.
+		 * @param openBy This refers to the control which opens the popover.
+		 */
+		beforeClose?: (openBy: sap.ui.core.Control) => void;
 	}
 
 	interface ProgressIndicatorMetadata extends sap.ui.core.ControlMetadata {
@@ -59913,9 +60683,13 @@ declare namespace sap.m {
 		 * @default true
 		 */
 		iconDensityAware?: boolean;
+		/**
+		 * Event indicates that the user has requested new data
+		 */
+		refresh?: () => void;
 	}
 
-	interface QuickViewMetadata {
+	interface QuickViewMetadata extends sap.m.QuickViewBaseMetadata {
 		/**
 		 * This property is reused from sap.m.Popover and only takes effect when running on desktop or tablet. Please refer the documentation of the placement property of sap.m.Popover.
 		 * @default Right
@@ -59926,9 +60700,75 @@ declare namespace sap.m {
 		 * @default 320px
 		 */
 		width?: sap.ui.core.CSSSize;
+		/**
+		 * This event fires after the QuickView is opened.
+		 * @param openBy This parameter refers to the control, which opens the QuickView.
+		 */
+		afterOpen?: (openBy: sap.ui.core.Control) => void;
+		/**
+		 * This event fires after the QuickView is closed.
+		 * @param openBy This parameter refers to the control, which opens the QuickView.
+		 * @param origin This parameter contains the control,
+		 * which triggers the close of the QuickView.
+		 * It is undefined when running on desktop or tablet.
+		 */
+		afterClose?: (openBy: sap.ui.core.Control, origin: sap.m.Button) => void;
+		/**
+		 * This event fires before the QuickView is opened.
+		 * @param openBy This parameter refers to the control, which opens the QuickView.
+		 */
+		beforeOpen?: (openBy: sap.ui.core.Control) => void;
+		/**
+		 * This event fires before the QuickView is closed.
+		 * @param openBy This parameter refers to the control, which opens the QuickView.
+		 * @param origin This parameter contains the control,
+		 * which triggers the close of the QuickView.
+		 * It is undefined when running on desktop or tablet.
+		 */
+		beforeClose?: (openBy: sap.ui.core.Control, origin: sap.m.Button) => void;
 	}
 
-	interface QuickViewCardMetadata {
+	interface QuickViewBaseMetadata extends sap.ui.core.ControlMetadata {
+		/**
+		 * The event is fired when navigation between two pages has been triggered.
+		 * The transition (if any) to the new page has not started yet.
+		 * This event can be aborted by the application with preventDefault(),
+		 * which means that there will be no navigation.
+		 * @param from The page which was displayed before the current navigation.
+		 * @param fromId The ID of the page which was displayed before the current navigation.
+		 * @param to The page which will be displayed after the current navigation.
+		 * @param toId The ID of the page which will be displayed after the current navigation.
+		 * @param firstTime Determines whether the "to" page (a control with the ID of the page
+		 * which is currently navigated to) has not been displayed/navigated to before.
+		 * @param isTo Determines whether this is a forward navigation.
+		 * @param isBack Determines whether this is a back navigation.
+		 * @param isBackToTop Determines  whether this is a navigation to the root page.
+		 * @param isBackToPage Determines whether this was a navigation to a specific page.
+		 * @param direction Determines how the navigation was triggered, possible values are
+		 * "to", "back", "backToPage", and "backToTop".
+		 */
+		navigate?: (from: sap.ui.core.Control, fromId: string, to: sap.ui.core.Control, toId: string, firstTime: boolean, isTo: boolean, isBack: boolean, isBackToTop: boolean, isBackToPage: boolean, direction: string) => void;
+		/**
+		 * The event is fired when navigation between two pages has completed.
+		 * In case of animated transitions this event is fired with some delay
+		 * after the "navigate" event.
+		 * @param from Determines the page, which has been displayed before navigation.
+		 * @param fromId Determines the ID of the page, which has been displayed before navigation.
+		 * @param to Determines the page, which is now displayed after navigation.
+		 * @param toId Determines the ID of the page, which is now displayed after navigation.
+		 * @param firstTime Determines whether the "to" page (a control with the ID of the page, which has been navigated to) has not been displayed/navigated to before.
+		 * @param isTo Determines whether this was a forward navigation.
+		 * @param isBack Determines whether this was a back navigation.
+		 * @param isBackToTop Determines whether this was a navigation to the root page.
+		 * @param isBackToPage Determines whether this was a navigation to a specific page.
+		 * @param direction Determines  how the navigation was triggered, possible values are
+		 * "to", "back", "backToPage", and "backToTop".
+		 * @param isTopPage Determines whether this is a navigation to the top page.
+		 */
+		afterNavigate?: (from: sap.ui.core.Control, fromId: string, to: sap.ui.core.Control, toId: string, firstTime: boolean, isTo: boolean, isBack: boolean, isBackToTop: boolean, isBackToPage: boolean, direction: string, isTopPage: boolean) => void;
+	}
+
+	interface QuickViewCardMetadata extends sap.m.QuickViewBaseMetadata {
 		/**
 		 * Determines whether the browser displays the vertical scroll bar or simply cuts the content of the QuickViewCard.
 		 * @default true
@@ -60083,6 +60923,11 @@ declare namespace sap.m {
 		 * @default Begin
 		 */
 		textAlign?: sap.ui.core.TextAlign;
+		/**
+		 * Event is triggered when the user makes a change on the radio button (selecting or unselecting it).
+		 * @param selected Checks whether the RadioButton is active or not.
+		 */
+		select?: (selected: boolean) => void;
 	}
 
 	interface RadioButtonGroupMetadata extends sap.ui.core.ControlMetadata {
@@ -60127,6 +60972,11 @@ declare namespace sap.m {
 		 * @default Inherit
 		 */
 		textDirection?: sap.ui.core.TextDirection;
+		/**
+		 * Fires when selection is changed by user interaction.
+		 * @param selectedIndex Index of the selected RadioButton.
+		 */
+		select?: (selectedIndex: number) => void;
 	}
 
 	interface RangeSliderMetadata extends sap.m.SliderMetadata {
@@ -60182,6 +61032,16 @@ declare namespace sap.m {
 		 * @default Half
 		 */
 		visualMode?: sap.m.RatingIndicatorVisualMode;
+		/**
+		 * The event is fired when the user has done a rating.
+		 * @param value The rated value
+		 */
+		change?: (value: number) => void;
+		/**
+		 * This event is triggered during the dragging period, each time the rating value changes.
+		 * @param value The current value of the rating after a live change event.
+		 */
+		liveChange?: (value: number) => void;
 	}
 
 	interface ResponsivePopoverMetadata extends sap.ui.core.ControlMetadata {
@@ -60243,6 +61103,28 @@ declare namespace sap.m {
 		 * @default false
 		 */
 		resizable?: boolean;
+		/**
+		 * Event is fired before popover or dialog is open.
+		 * @param openBy This parameter contains the control which is passed as the parameter when calling openBy method. When runs on the phone, this parameter is undefined.
+		 */
+		beforeOpen?: (openBy: sap.ui.core.Control) => void;
+		/**
+		 * Event is fired after popover or dialog is open.
+		 * @param openBy This parameter contains the control which is passed as the parameter when calling openBy method. When runs on the phone, this parameter is undefined.
+		 */
+		afterOpen?: (openBy: sap.ui.core.Control) => void;
+		/**
+		 * Event is fired before popover or dialog is closed.
+		 * @param openBy This parameter contains the control which is passed as the parameter when calling openBy method. When runs on the phone, this parameter is undefined.
+		 * @param origin This parameter contains the control which triggers the close of the ResponsivePopover. This parameter is undefined when runs on desktop or tablet.
+		 */
+		beforeClose?: (openBy: sap.ui.core.Control, origin: sap.m.Button) => void;
+		/**
+		 * Event is fired after popover or dialog is closed.
+		 * @param openBy This parameter contains the control which is passed as the parameter when calling openBy method. When runs on the phone, this parameter is undefined.
+		 * @param origin This parameter contains the control which triggers the close of the ResponsivePopover. This parameter is undefined when runs on desktop or tablet.
+		 */
+		afterClose?: (openBy: sap.ui.core.Control, origin: sap.m.Button) => void;
 	}
 
 	interface ScrollContainerMetadata extends sap.ui.core.ControlMetadata {
@@ -60331,6 +61213,26 @@ declare namespace sap.m {
 		 * @default false
 		 */
 		enableSuggestions?: boolean;
+		/**
+		 * Event which is fired when the user triggers a search.
+		 * @param query The search query string.
+		 * @param suggestionItem Suggestion list item in case if the user has selected an item from the suggestions list.
+		 * @param refreshButtonPressed Indicates if the user pressed the refresh icon.
+		 * @param clearButtonPressed Indicates if the user pressed the clear icon.
+		 */
+		search?: (query: string, suggestionItem: sap.m.SuggestionItem, refreshButtonPressed: boolean, clearButtonPressed: boolean) => void;
+		/**
+		 * This event is fired when the value of the search field is changed by a user - e.g. at each key press. Do not invalidate or re-render a focused search field, especially during the liveChange event.
+		 * @param newValue Current search string.
+		 */
+		liveChange?: (newValue: string) => void;
+		/**
+		 * This event is fired when the search field is initially focused or its value is changed by the user.
+		 * This event means that suggestion data should be updated, in case if suggestions are used.
+		 * Use the value parameter to create new suggestions for it.
+		 * @param suggestValue Current search string of the search field.
+		 */
+		suggest?: (suggestValue: string) => void;
 	}
 
 	interface SegmentedButtonMetadata extends sap.ui.core.ControlMetadata {
@@ -60348,6 +61250,13 @@ declare namespace sap.m {
 		 * @default 
 		 */
 		selectedKey?: string;
+		/**
+		 * Fires when the user selects a button, which returns the ID and button object.
+		 * @param button Reference to the button, that has been selected.
+		 * @param id ID of the button, which has been selected.
+		 * @param key Key of the button, which has been selected. This property is only filled when the control is initiated with the items aggregation.
+		 */
+		select?: (button: sap.m.Button, id: string, key: string) => void;
 	}
 
 	interface SegmentedButtonItemMetadata extends sap.ui.core.ItemMetadata {
@@ -60365,6 +61274,10 @@ declare namespace sap.m {
 		 * Sets the width of the buttons.
 		 */
 		width?: sap.ui.core.CSSSize;
+		/**
+		 * Fires when the user clicks on an individual button.
+		 */
+		press?: () => void;
 	}
 
 	interface SelectMetadata extends sap.ui.core.ControlMetadata {
@@ -60459,6 +61372,17 @@ declare namespace sap.m {
 		 * @default true
 		 */
 		forceSelection?: boolean;
+		/**
+		 * This event is fired when the value in the selection field is changed in combination with one of
+		 * the following actions:
+		 * <ul>
+		 * 	<li>The focus leaves the selection field</li>
+		 * 	<li>The <i>Enter</i> key is pressed</li>
+		 * 	<li>The item is pressed</li>
+		 * </ul>
+		 * @param selectedItem The selected item.
+		 */
+		change?: (selectedItem: sap.ui.core.Item) => void;
 	}
 
 	interface SelectDialogMetadata extends sap.ui.core.ControlMetadata {
@@ -60492,6 +61416,31 @@ declare namespace sap.m {
 		 * Determines the content height of the inner dialog. For more information, see the dialog documentation.
 		 */
 		contentHeight?: sap.ui.core.CSSSize;
+		/**
+		 * This event will be fired when the dialog is confirmed by selecting an item in single selection mode or by pressing the confirmation button in multi selection mode . The items being selected are returned as event parameters.
+		 * @param selectedItem Returns the selected list item. When no item is selected, "null" is returned. When multi-selection is enabled and multiple items are selected, only the first selected item is returned.
+		 * @param selectedItems Returns an array containing the visible selected list items. If no items are selected, an empty array is returned.
+		 * @param selectedContexts Returns the binding contexts of the selected items including the non-visible items.
+		 * NOTE: In contrast to the parameter "selectedItems", this parameter will also include the selected but NOT visible items (e.g. due to list filtering). An empty array will be set for this parameter if no data binding is used.
+		 * NOTE: When the list binding is pre-filtered and there are items in the selection that are not visible upon opening the dialog, these contexts are not loaded. Therefore, these items will not be included in the selectedContexts array unless they are displayed at least once.
+		 */
+		confirm?: (selectedItem: sap.m.StandardListItem, selectedItems: sap.m.StandardListItem[], selectedContexts: string) => void;
+		/**
+		 * This event will be fired when the search button has been clicked on the searchfield on the visual control
+		 * @param value The value entered in the search
+		 * @param itemsBinding The Items binding of the Select Dialog for search purposes. It will only be available if the items aggregation is bound to a model.
+		 */
+		search?: (value: string, itemsBinding: any) => void;
+		/**
+		 * This event will be fired when the value of the search field is changed by a user - e.g. at each key press
+		 * @param value The value to search for, which can change at any keypress
+		 * @param itemsBinding The Items binding of the Select Dialog. It will only be available if the items aggregation is bound to a model.
+		 */
+		liveChange?: (value: string, itemsBinding: any) => void;
+		/**
+		 * This event will be fired when the cancel button is clicked
+		 */
+		cancel?: () => void;
 	}
 
 	interface SelectListMetadata extends sap.ui.core.ControlMetadata {
@@ -60535,6 +61484,19 @@ declare namespace sap.m {
 		 * @default Delimited
 		 */
 		keyboardNavigationMode?: sap.m.SelectListKeyboardNavigationMode;
+		/**
+		 * This event is fired when the selection has changed.
+		 * 
+		 * <b>Note: </b> The selection can be changed by pressing an non-selected item or
+		 * via keyboard and after the enter or space key is pressed.
+		 * @param selectedItem The selected item.
+		 */
+		selectionChange?: (selectedItem: sap.ui.core.Item) => void;
+		/**
+		 * This event is fired when an item is pressed.
+		 * @param item The pressed item.
+		 */
+		itemPress?: (item: sap.ui.core.Item) => void;
 	}
 
 	interface ShellMetadata extends sap.ui.core.ControlMetadata {
@@ -60602,6 +61564,10 @@ declare namespace sap.m {
 		 * See jQuery.sap.setIcons() for full documentation.
 		 */
 		homeIcon?: any;
+		/**
+		 * Fires when the user presses the logout button/link.
+		 */
+		logout?: () => void;
 	}
 
 	interface SliderMetadata extends sap.ui.core.ControlMetadata {
@@ -60657,6 +61623,16 @@ declare namespace sap.m {
 		 * @default true
 		 */
 		showHandleTooltip?: boolean;
+		/**
+		 * This event is triggered after the end user finishes interacting, if there is any change.
+		 * @param value The current value of the slider after a change.
+		 */
+		change?: (value: number) => void;
+		/**
+		 * This event is triggered during the dragging period, each time the slider value changes.
+		 * @param value The current value of the slider after a live change.
+		 */
+		liveChange?: (value: number) => void;
 	}
 
 	interface SlideTileMetadata extends sap.ui.core.ControlMetadata {
@@ -60697,6 +61673,11 @@ declare namespace sap.m {
 		 * On Android, these icons may or may not be used by the device. Chances can be improved by adding glare effect, rounded corners, setting the file name to end with "-precomposed.png", and setting the homeIconPrecomposed property to true.
 		 */
 		homeIcon?: any;
+		/**
+		 * Fires when orientation (portrait/landscape) is changed.
+		 * @param landscape Returns true if the device is in landscape mode.
+		 */
+		orientationChange?: (landscape: boolean) => void;
 	}
 
 	interface SplitContainerMetadata extends sap.ui.core.ControlMetadata {
@@ -60760,6 +61741,91 @@ declare namespace sap.m {
 		 * @default 1
 		 */
 		backgroundOpacity?: number;
+		/**
+		 * Fires when navigation between two pages in master area has been triggered. The transition (if any) to the new page has not started yet.
+		 * This event can be aborted by the application with preventDefault(), which means that there will be no navigation.
+		 * @param from The page, which was displayed before the current navigation.
+		 * @param fromId The ID of the page, which was displayed before the current navigation.
+		 * @param to The page, which will be displayed after the current navigation.
+		 * @param toId The ID of the page, which will be displayed after the current navigation.
+		 * @param firstTime Determines whether the "to" page (more precisely: a control with the ID of the page,
+		 * which is currently being navigated to) has not been displayed/navigated to before.
+		 * @param isTo Determines whether this is a forward navigation, triggered by to().
+		 * @param isBack Determines whether this is a back navigation, triggered by back().
+		 * @param isBackToTop Determines whether this is a navigation to the root page, triggered by backToTop().
+		 * @param isBackToPage Determines whether this was a navigation to a specific page, triggered by backToPage().
+		 * @param direction Determines how the navigation was triggered, possible values are "to", "back", "backToPage", and "backToTop".
+		 */
+		masterNavigate?: (from: sap.ui.core.Control, fromId: string, to: sap.ui.core.Control, toId: string, firstTime: boolean, isTo: boolean, isBack: boolean, isBackToTop: boolean, isBackToPage: boolean, direction: string) => void;
+		/**
+		 * Fires when navigation between two pages in master area has completed.
+		 * NOTE: In case of animated transitions this event is fired with some delay after the navigate event.
+		 * @param from The page, which had been displayed before navigation.
+		 * @param fromId The ID of the page, which had been displayed before navigation.
+		 * @param to The page, which is now displayed after navigation.
+		 * @param toId The ID of the page, which is now displayed after navigation.
+		 * @param firstTime Whether the "to" page (more precisely: a control with the ID of the page, which has been navigated to)
+		 * has not been displayed/navigated to before.
+		 * @param isTo Determines whether was a forward navigation, triggered by to().
+		 * @param isBack Determines whether this was a back navigation, triggered by back().
+		 * @param isBackToTop Determines whether this was a navigation to the root page, triggered by backToTop().
+		 * @param isBackToPage Determines whether this was a navigation to a specific page, triggered by backToPage().
+		 * @param direction Determines how the navigation was triggered, possible values are "to", "back", "backToPage", and "backToTop".
+		 */
+		afterMasterNavigate?: (from: sap.ui.core.Control, fromId: string, to: sap.ui.core.Control, toId: string, firstTime: boolean, isTo: boolean, isBack: boolean, isBackToTop: boolean, isBackToPage: boolean, direction: string) => void;
+		/**
+		 * Fires when a Master Button needs to be shown or hidden. This is necessary for custom headers when the SplitContainer control does not handle the placement of the master button automatically.
+		 */
+		masterButton?: () => void;
+		/**
+		 * Fires before the master area is opened.
+		 */
+		beforeMasterOpen?: () => void;
+		/**
+		 * Fires when the master area is fully opened after animation if any.
+		 */
+		afterMasterOpen?: () => void;
+		/**
+		 * Fires before the master area is closed.
+		 */
+		beforeMasterClose?: () => void;
+		/**
+		 * Fires when the master area is fully closed after the animation (if any).
+		 */
+		afterMasterClose?: () => void;
+		/**
+		 * Fires when navigation between two pages in detail area has been triggered.
+		 * The transition (if any) to the new page has not started yet.
+		 * NOTE: This event can be aborted by the application with preventDefault(), which means that there will be no navigation.
+		 * @param from The page, which was displayed before the current navigation.
+		 * @param fromId The ID of the page, which was displayed before the current navigation.
+		 * @param to The page, which will be displayed after the current navigation.
+		 * @param toId The ID of the page, which will be displayed after the current navigation.
+		 * @param firstTime Determines whether the "to" page (more precisely: a control with the ID of the page,
+		 * which is currently navigated to) has not been displayed/navigated to before.
+		 * @param isTo Determines whether this is a forward navigation, triggered by to().
+		 * @param isBack Determines whether this is a back navigation, triggered by back().
+		 * @param isBackToTop Determines whether this is a navigation to the root page, triggered by backToTop().
+		 * @param isBackToPage Determines whether this was a navigation to a specific page, triggered by backToPage().
+		 * @param direction Determines how the navigation was triggered, possible values are "to", "back", "backToPage", and "backToTop".
+		 */
+		detailNavigate?: (from: sap.ui.core.Control, fromId: string, to: sap.ui.core.Control, toId: string, firstTime: boolean, isTo: boolean, isBack: boolean, isBackToTop: boolean, isBackToPage: boolean, direction: string) => void;
+		/**
+		 * Fires when navigation between two pages in detail area has completed.
+		 * NOTE: In case of animated transitions this event is fired with some delay after the "navigate" event.
+		 * @param from The page, which had been displayed before navigation.
+		 * @param fromId The ID of the page, which had been displayed before navigation.
+		 * @param to The page, which is now displayed after navigation.
+		 * @param toId The ID of the page, which is now displayed after navigation.
+		 * @param firstTime Determines whether the "to" page (more precisely: a control with the ID of the page,
+		 * which has been navigated to) has not been displayed/navigated to before.
+		 * @param isTo Determines whether was a forward navigation, triggered by to().
+		 * @param isBack Determines whether this was a back navigation, triggered by back().
+		 * @param isBackToTop Determines whether this was a navigation to the root page, triggered by backToTop().
+		 * @param isBackToPage Determines whether this was a navigation to a specific page, triggered by backToPage().
+		 * @param direction Determines how the navigation was triggered, possible values are "to", "back", "backToPage", and "backToTop".
+		 */
+		afterDetailNavigate?: (from: sap.ui.core.Control, fromId: string, to: sap.ui.core.Control, toId: string, firstTime: boolean, isTo: boolean, isBack: boolean, isBackToTop: boolean, isBackToPage: boolean, direction: string) => void;
 	}
 
 	interface StandardListItemMetadata extends sap.m.ListItemBaseMetadata {
@@ -60960,6 +62026,11 @@ declare namespace sap.m {
 		 * @default Default
 		 */
 		type?: sap.m.SwitchType;
+		/**
+		 * Triggered when a switch changes the state.
+		 * @param state The new state of the switch.
+		 */
+		change?: (state: boolean) => void;
 	}
 
 	interface TabContainerMetadata extends sap.ui.core.ControlMetadata {
@@ -60968,6 +62039,20 @@ declare namespace sap.m {
 		 * @default false
 		 */
 		showAddNewButton?: boolean;
+		/**
+		 * Fired when an item is closed.
+		 * @param item The item to be closed.
+		 */
+		itemClose?: (item: sap.m.TabContainerItem) => void;
+		/**
+		 * Fired when an item is pressed.
+		 * @param item The selected item.
+		 */
+		itemSelect?: (item: sap.m.TabContainerItem) => void;
+		/**
+		 * Fired when <code>Add New Tab</code> button is pressed.
+		 */
+		addNewButtonPress?: () => void;
 	}
 
 	interface TabContainerItemMetadata {
@@ -60985,6 +62070,13 @@ declare namespace sap.m {
 		 * @default false
 		 */
 		modified?: boolean;
+		/**
+		 * Sends information that some of the properties have changed.
+		 * @param itemChanged The item changed.
+		 * @param propertyKey The key of the property.
+		 * @param propertyValue The value of the property.
+		 */
+		itemPropertyChanged?: (itemChanged: sap.m.TabContainerItem, propertyKey: string, propertyValue: any) => void;
 	}
 
 	interface TableMetadata extends sap.m.ListBaseMetadata {
@@ -61010,7 +62102,7 @@ declare namespace sap.m {
 		showOverlay?: boolean;
 	}
 
-	interface TablePersoControllerMetadata {
+	interface TablePersoControllerMetadata extends sap.ui.base.ManagedObjectMetadata {
 		contentWidth?: sap.ui.core.CSSSize;
 		contentHeight?: sap.ui.core.CSSSize;
 		/**
@@ -61020,9 +62112,13 @@ declare namespace sap.m {
 		hasGrouping?: boolean;
 		showSelectAll?: boolean;
 		showResetAll?: boolean;
+		/**
+		 * 
+		 */
+		personalizationsDone?: () => void;
 	}
 
-	interface TablePersoDialogMetadata {
+	interface TablePersoDialogMetadata extends sap.ui.base.ManagedObjectMetadata {
 		contentWidth?: sap.ui.core.CSSSize;
 		contentHeight?: sap.ui.core.CSSSize;
 		persoMap?: any;
@@ -61031,6 +62127,14 @@ declare namespace sap.m {
 		hasGrouping?: boolean;
 		showSelectAll?: boolean;
 		showResetAll?: boolean;
+		/**
+		 * 
+		 */
+		confirm?: () => void;
+		/**
+		 * 
+		 */
+		cancel?: () => void;
 	}
 
 	interface TableSelectDialogMetadata extends sap.ui.core.ControlMetadata {
@@ -61065,6 +62169,31 @@ declare namespace sap.m {
 		 * Specifies the content height of the inner dialog. For more information, see the Dialog documentation.
 		 */
 		contentHeight?: sap.ui.core.CSSSize;
+		/**
+		 * Fires when the dialog is confirmed by selecting an item in single-selection mode or by pressing the confirmation button in multi-selection mode. The items being selected are returned as event parameters.
+		 * @param selectedItem Returns the selected list item. When no item is selected, "null" is returned. When multi-selection is enabled and multiple items are selected, only the first selected item is returned.
+		 * @param selectedItems Returns an array containing the visible selected list items. If no items are selected, an empty array is returned.
+		 * @param selectedContexts Returns the binding contexts of the selected items including the non-visible items.
+		 * Note: In contrast to the parameter "selectedItems", this parameter includes the selected but NOT visible items (due to list filtering). An empty array is set for this parameter if no Databinding is used.
+		 */
+		confirm?: (selectedItem: sap.m.StandardListItem, selectedItems: sap.m.StandardListItem[], selectedContexts: string) => void;
+		/**
+		 * Fires when the search button has been clicked on dialog.
+		 * @param value Specifies the value entered in the search field.
+		 * @param itemsBinding Determines the Items binding of the Table Select Dialog. Only available if the items aggregation is bound to a model.
+		 */
+		search?: (value: string, itemsBinding: any) => void;
+		/**
+		 * Fires when the value of the search field is changed by a user (for example at each key press).
+		 * @param value Specifies the value entered in the search field.
+		 * @param itemsBinding The Items binding of the Table Select Dialog.
+		 * Only available if the items aggregation is bound to a model.
+		 */
+		liveChange?: (value: string, itemsBinding: any) => void;
+		/**
+		 * Fires when the Cancel button is clicked.
+		 */
+		cancel?: () => void;
 	}
 
 	interface TextMetadata extends sap.ui.core.ControlMetadata {
@@ -61143,6 +62272,11 @@ declare namespace sap.m {
 		 * @default 0
 		 */
 		growingMaxLines?: number;
+		/**
+		 * Is fired whenever the user has modified the text shown on the text area.
+		 * @param value The new <code>value</code> of the control.
+		 */
+		liveChange?: (value: string) => void;
 	}
 
 	interface TileMetadata extends sap.ui.core.ControlMetadata {
@@ -61151,6 +62285,10 @@ declare namespace sap.m {
 		 * @default true
 		 */
 		removable?: boolean;
+		/**
+		 * Tap event is raised if the user taps or clicks the control.
+		 */
+		press?: () => void;
 	}
 
 	interface TileContainerMetadata extends sap.ui.core.ControlMetadata {
@@ -61172,6 +62310,21 @@ declare namespace sap.m {
 		 * Determines whether the user is allowed to add Tiles in Edit mode (editable = true).
 		 */
 		allowAdd?: boolean;
+		/**
+		 * Fires if a Tile is moved.
+		 * @param tile The Tile that has been moved.
+		 * @param newIndex The new index of the Tile in the tiles aggregation.
+		 */
+		tileMove?: (tile: sap.m.Tile, newIndex: number) => void;
+		/**
+		 * Fires if a Tile is deleted in Edit mode.
+		 * @param tile The deleted Tile.
+		 */
+		tileDelete?: (tile: sap.m.Tile) => void;
+		/**
+		 * Fires when a Tile is added.
+		 */
+		tileAdd?: () => void;
 	}
 
 	interface TileContentMetadata extends sap.ui.core.ControlMetadata {
@@ -61321,6 +62474,18 @@ declare namespace sap.m {
 		 * @default Inherit
 		 */
 		textDirection?: sap.ui.core.TextDirection;
+		/**
+		 * This event is fired if the user clicks the token's delete icon.
+		 */
+		delete?: () => void;
+		/**
+		 * This event is fired when the user clicks on the token.
+		 */
+		press?: () => void;
+		/**
+		 * This event is fired when the token gets selected.
+		 */
+		select?: () => void;
 	}
 
 	interface TokenizerMetadata extends sap.ui.core.ControlMetadata {
@@ -61333,6 +62498,21 @@ declare namespace sap.m {
 		 * Defines the width of the Tokenizer.
 		 */
 		width?: sap.ui.core.CSSSize;
+		/**
+		 * fired when the tokens aggregation changed (add / remove token)
+		 * @param type type of tokenChange event.
+		 * There are four TokenChange types: "added", "removed", "removedAll", "tokensChanged".
+		 * Use Tokenizer.TokenChangeType.Added for "added",	Tokenizer.TokenChangeType.Removed for "removed", Tokenizer.TokenChangeType.RemovedAll for "removedAll" and Tokenizer.TokenChangeType.TokensChanged for "tokensChanged".
+		 * @param token the added token or removed token.
+		 * This parameter is used when tokenChange type is "added" or "removed".
+		 * @param tokens the array of removed tokens.
+		 * This parameter is used when tokenChange type is "removedAll".
+		 * @param addedTokens the array of tokens that are added.
+		 * This parameter is used when tokenChange type is "tokenChanged".
+		 * @param removedTokens the array of tokens that are removed.
+		 * This parameter is used when tokenChange type is "tokenChanged".
+		 */
+		tokenChange?: (type: string, token: sap.m.Token, tokens: sap.m.Token[], addedTokens: sap.m.Token[], removedTokens: sap.m.Token[]) => void;
 	}
 
 	interface ToolbarMetadata extends sap.ui.core.ControlMetadata {
@@ -61365,6 +62545,11 @@ declare namespace sap.m {
 		 * @default Auto
 		 */
 		design?: sap.m.ToolbarDesign;
+		/**
+		 * Fired when the user clicks on the toolbar, if the Active property is set to "true".
+		 * @param srcControl The toolbar item that was pressed
+		 */
+		press?: (srcControl: sap.ui.core.Control) => void;
 	}
 
 	interface ToolbarLayoutDataMetadata {
@@ -61470,6 +62655,102 @@ declare namespace sap.m {
 		 * @default None
 		 */
 		mode?: sap.m.ListMode;
+		/**
+		 * The event is triggered when files are selected in the FileUploader dialog. Applications can set parameters and headerParameters which will be dispatched to the embedded FileUploader control.
+		 * Limitation: parameters and headerParameters are not supported by Internet Explorer 9.
+		 * @param documentId An unique Id of the attached document.
+		 * This parameter is deprecated since version 1.28.0, use parameter files instead.
+		 * @param files A FileList of individually selected files from the underlying system. See www.w3.org for the FileList Interface definition.
+		 * Limitation: Internet Explorer 9 supports only single file with property file.name.
+		 * Since version 1.28.0.
+		 */
+		change?: (documentId: string, files: any[]) => void;
+		/**
+		 * The event is triggered when an uploaded attachment is selected and the Delete button is pressed.
+		 * @param documentId An unique Id of the attached document.
+		 * This parameter is deprecated since version 1.28.0, use parameter item instead.
+		 * @param item An item to be deleted from the collection.
+		 * Since version 1.28.0.
+		 */
+		fileDeleted?: (documentId: string, item: sap.m.UploadCollectionItem) => void;
+		/**
+		 * The event is triggered when the name of a chosen file is longer than the value specified with the maximumFilenameLength property (only if provided by the application).
+		 * @param documentId An unique Id of the attached document.
+		 * This parameter is deprecated since version 1.28.0, use parameter files instead.
+		 * @param files A FileList of individually selected files from the underlying system.
+		 * Limitation: Internet Explorer 9 supports only single file with property file.name.
+		 * Since version 1.28.0.
+		 */
+		filenameLengthExceed?: (documentId: string, files: any[]) => void;
+		/**
+		 * The event is triggered when the file name is changed.
+		 * @param documentId An unique Id of the attached document.
+		 * This parameter is deprecated since version 1.28.0, use parameter item instead.
+		 * @param fileName The new file name.
+		 * This parameter is deprecated since version 1.28.0, use parameter item instead.
+		 * @param item The renamed UI element as a UploadCollectionItem.
+		 * Since version 1.28.0.
+		 */
+		fileRenamed?: (documentId: string, fileName: string, item: sap.m.UploadCollectionItem) => void;
+		/**
+		 * The event is triggered when the file size of an uploaded file is exceeded (only if the maxFileSize property was provided by the application).
+		 * This event is not supported by Internet Explorer 9.
+		 * @param documentId An unique Id of the attached document.
+		 * This parameter is deprecated since version 1.28.0, use parameter files instead.
+		 * @param fileSize The size in MB of a file to be uploaded.
+		 * This parameter is deprecated since version 1.28.0, use parameter files instead.
+		 * @param files A FileList of individually selected files from the underlying system.
+		 * Limitation: Internet Explorer 9 supports only single file with property file.name.
+		 * Since version 1.28.0.
+		 */
+		fileSizeExceed?: (documentId: string, fileSize: string, files: any[]) => void;
+		/**
+		 * The event is triggered when the file type or the MIME type don't match the permitted types (only if the fileType property or the mimeType property are provided by the application).
+		 * @param documentId An unique Id of the attached document.
+		 * This parameter is deprecated since version 1.28.0, use parameter files instead.
+		 * @param fileType File type.
+		 * This parameter is deprecated since version 1.28.0, use parameter files instead.
+		 * @param mimeType MIME type.
+		 * This parameter is deprecated since version 1.28.0, use parameter files instead.
+		 * @param files A FileList of individually selected files from the underlying system.
+		 * Limitation: Internet Explorer 9 supports only single file.
+		 * Since version 1.28.0.
+		 */
+		typeMissmatch?: (documentId: string, fileType: string, mimeType: string, files: any[]) => void;
+		/**
+		 * The event is triggered as soon as the upload request is completed.
+		 * @param readyStateXHR Ready state XHR. This parameter is deprecated since version 1.28.0., use parameter files instead.
+		 * @param response Response of the completed upload request. This parameter is deprecated since version 1.28.0., use parameter files instead.
+		 * @param status Status Code of the completed upload event. This parameter is deprecated since version 1.28.0., use parameter files instead.
+		 * @param files A list of uploaded files. Each entry contains the following members.
+		 * fileName	: The name of a file to be uploaded.
+		 * response	: Response message which comes from the server. On the server side, this response has to be put within the 'body' tags of the response document of the iFrame. It can consist of a return code and an optional message. This does not work in cross-domain scenarios.
+		 * responseRaw : HTTP-Response which comes from the server. This property is not supported by Internet Explorer Versions lower than 9.
+		 * status	: Status of the XHR request. This property is not supported by Internet Explorer 9 and lower.
+		 * headers : HTTP-Response-Headers which come from the server. Provided as a JSON-map, i.e. each header-field is reflected by a property in the header-object, with the property value reflecting the header-field's content. This property is not supported by Internet Explorer 9 and lower.
+		 * Since version 1.28.0.
+		 */
+		uploadComplete?: (readyStateXHR: string, response: string, status: string, files: any[]) => void;
+		/**
+		 * The event is triggered as soon as the upload request was terminated by the user.
+		 * @param fileName Specifies the name of the file of which the upload is to be terminated.
+		 * @param getHeaderParameter This callback function returns the corresponding header parameter (type sap.m.UploadCollectionParameter) if available.
+		 */
+		uploadTerminated?: (fileName: string, getHeaderParameter: any) => void;
+		/**
+		 * The event is triggered before the actual upload starts. An event is fired per file. All the necessary header parameters should be set here.
+		 * @param fileName Specifies the name of the file to be uploaded.
+		 * @param addHeaderParameter Adds a header parameter to the file that will be uploaded.
+		 * @param getHeaderParameter Returns the corresponding header parameter (type sap.m.UploadCollectionParameter) if available.
+		 */
+		beforeUploadStarts?: (fileName: string, addHeaderParameter: any, getHeaderParameter: any) => void;
+		/**
+		 * Fires when selection is changed via user interaction inside the control.
+		 * @param selectedItem The item whose selection has changed. In <code>MultiSelect</code> mode, only the selected item upmost is returned. This parameter can be used for single-selection modes.
+		 * @param selectedItems Array of items whose selection has changed. This parameter can be used for <code>MultiSelect</code> mode.
+		 * @param selected Indicates whether the <code>listItem</code> parameter is selected or not.
+		 */
+		selectionChange?: (selectedItem: sap.m.UploadCollectionItem, selectedItems: sap.m.UploadCollectionItem[], selected: boolean) => void;
 	}
 
 	interface UploadCollectionItemMetadata {
@@ -61580,6 +62861,32 @@ declare namespace sap.m {
 		 * @default false
 		 */
 		groupDescending?: boolean;
+		/**
+		 * Indicates that the user has pressed the OK button and the selected sort, group, and filter settings should be applied to the data on this page.
+		 * </br></br><b>Note:</b> Custom tabs are not converted to event parameters automatically. For custom tabs, you have to read the state of your controls inside the callback of this event.
+		 * @param sortItem The selected sort item.
+		 * @param sortDescending The selected sort order (true = descending, false = ascending).
+		 * @param groupItem The selected group item.
+		 * @param groupDescending The selected group order (true = descending, false = ascending).
+		 * @param presetFilterItem The selected preset filter item.
+		 * @param filterItems The selected filters in an array of ViewSettingsItem.
+		 * @param filterKeys The selected filter items in an object notation format: { key: boolean }. If a custom control filter was displayed (for example, the user clicked on the filter item), the value for its key is set to true to indicate that there has been an interaction with the control.
+		 * @param filterString The selected filter items in a string format to display in the control's header bar in format "Filtered by: key (subkey1, subkey2, subkey3)".
+		 */
+		confirm?: (sortItem: sap.m.ViewSettingsItem, sortDescending: boolean, groupItem: sap.m.ViewSettingsItem, groupDescending: boolean, presetFilterItem: sap.m.ViewSettingsItem, filterItems: sap.m.ViewSettingsItem[], filterKeys: any, filterString: string) => void;
+		/**
+		 * Called when the Cancel button is pressed. It can be used to set the state of custom filter controls.
+		 */
+		cancel?: () => void;
+		/**
+		 * Called when the reset filters button is pressed. It can be used to clear the state of custom filter controls.
+		 */
+		resetFilters?: () => void;
+		/**
+		 * Fired when the filter detail page is opened.
+		 * @param parentFilterItem The filter item for which the details are opened.
+		 */
+		filterDetailPageOpened?: (parentFilterItem: sap.m.ViewSettingsFilterItem) => void;
 	}
 
 	interface ViewSettingsFilterItemMetadata extends sap.m.ViewSettingsItemMetadata {
@@ -61588,6 +62895,10 @@ declare namespace sap.m {
 		 * @default true
 		 */
 		multiSelect?: boolean;
+		/**
+		 * Let the outside world know that the filter detail aggregation was changed.
+		 */
+		filterDetailItemsAggregationChange?: () => void;
 	}
 
 	interface ViewSettingsItemMetadata extends sap.ui.core.ItemMetadata {
@@ -61596,6 +62907,13 @@ declare namespace sap.m {
 		 * @default false
 		 */
 		selected?: boolean;
+		/**
+		 * Let the outside world know that some of its properties has changed.
+		 * @param changedItem Instance of the item that changed.
+		 * @param propertyKey Key of the changed property.
+		 * @param propertyValue Value of the changed property.
+		 */
+		itemPropertyChanged?: (changedItem: sap.m.ViewSettingsItem, propertyKey: string, propertyValue: any) => void;
 	}
 
 	interface WizardMetadata extends sap.ui.core.ControlMetadata {
@@ -61634,6 +62952,16 @@ declare namespace sap.m {
 		 * @default false
 		 */
 		enableBranching?: boolean;
+		/**
+		 * The StepActivated event is fired every time a new step is activated.
+		 * @param index The index of the activated step as a parameter. One-based.
+		 */
+		stepActivate?: (index: number) => void;
+		/**
+		 * The complete event is fired when the user clicks the finish button of the Wizard.
+		 * The finish button is only available on the last step of the Wizard.
+		 */
+		complete?: () => void;
 	}
 
 	interface WizardStepMetadata extends sap.ui.core.ControlMetadata {
@@ -61657,6 +62985,15 @@ declare namespace sap.m {
 		 * @default true
 		 */
 		validated?: boolean;
+		/**
+		 * This event is fired after the user presses the Next button in the Wizard,
+		 * or on <code>nextStep</code> method call from the app developer.
+		 */
+		complete?: () => void;
+		/**
+		 * This event is fired on next step activation from the Wizard.
+		 */
+		activate?: () => void;
 	}
 	/**
 	 * Hide the soft keyboard.

@@ -11,6 +11,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using UI5TypeScriptGeneratorJsonGUI.Properties;
 
 namespace UI5TypeScriptGeneratorJsonGUI
@@ -25,6 +27,8 @@ namespace UI5TypeScriptGeneratorJsonGUI
             //var apifiles = Directory.GetFiles(@"C:\Temp\test-resources", "*api.json", SearchOption.AllDirectories).Select(x=> x.Replace(@"C:\Temp\test-resources\", "")).Aggregate((a,b) => a+Environment.NewLine + $"sb.AppendLine(\"{b}\");").Replace("\\", "/");
 
             InitializeComponent();
+
+            globalValues.Log = this;
 
             globalValues.TranslationDictionary = CreateDictionaryFromConfigString(Settings.TypeReplacements);
             globalValues.Typedefinitions = CreateDictionaryFromConfigString(Settings.TypeDefinitions);
@@ -177,7 +181,7 @@ namespace UI5TypeScriptGeneratorJsonGUI
             {
                 if (LogEntries.Count > maxlog)
                     LogEntries.RemoveAt(0);
-                LogEntries.Add(entry);
+                LogEntries.Add(new LogItem(entry));
                 log.ScrollIntoView(log.Items[log.Items.Count - 1]);
             });
         }
@@ -192,7 +196,7 @@ namespace UI5TypeScriptGeneratorJsonGUI
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public ObservableCollection<string> LogEntries { get; set; } = new ObservableCollection<string>();
+        public ObservableCollection<LogItem> LogEntries { get; set; } = new ObservableCollection<LogItem>();
 
         private string GetCorrespondingType(string value)
         {
@@ -279,8 +283,6 @@ namespace UI5TypeScriptGeneratorJsonGUI
                 Log("Conversion successfully executed.");
 
                 Output = globalValues.UntouchedTypes.Select(x => x.Key + "(" + x.Value.ToString() + ")").OrderBy(x => x).Aggregate((a, b) => a + Environment.NewLine + b);
-
-                EventProperties = globalValues.eventparameters.Aggregate((a, b) => a + Environment.NewLine + b);
             });
         }
 
@@ -639,6 +641,30 @@ namespace UI5TypeScriptGeneratorJsonGUI
         private void ClearHistory_Click(object sender, RoutedEventArgs e)
         {
             LogEntries.Clear();
+        }
+
+        private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            switch(e.Key)
+            {
+                case System.Windows.Input.Key.F5:
+                    tabctrl.SelectedIndex = 2;
+                    Button_Click(this, null);
+                    break;
+                case System.Windows.Input.Key.F12:
+                    OpenOutputFolder_Click(this, null);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void log_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if ((Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) && e.Key == Key.C)
+            {
+                log.SelectedItems.Cast<LogItem>().Aggregate("", (a, b) => a + Environment.NewLine + b.Text);
+            }
         }
     }
 }

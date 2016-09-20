@@ -2353,6 +2353,59 @@ declare namespace sap.ui {
 			 */
 			reset();
 		}
+	
+		interface ManagedObjectMetadata {
+			/**
+			 * Fired after a new value for a bound property has been propagated to the model.
+			 * Only fired, when the binding uses a data type.
+			 * @param element ManagedObject instance whose property initiated the model update.
+			 * @param property Name of the property for which the bound model property has been updated.
+			 * @param type Data type used in the binding.
+			 * @param newValue New value (external representation) as propagated to the model.
+			 * 
+			 * <b>Note: </b>the model might modify (normalize) the value again and this modification
+			 * will be stored in the ManagedObject. The 'newValue' parameter of this event contains
+			 * the value <b>before</b> such a normalization.
+			 * @param oldValue Old value (external representation) as previously stored in the ManagedObject.
+			 */
+			validationSuccess?: (element: sap.ui.base.ManagedObject, property: string, type: sap.ui.model.Type, newValue: any, oldValue: any) => void;
+			/**
+			 * Fired when a new value for a bound property should have been propagated to the model,
+			 * but validating the value failed with an exception.
+			 * @param element ManagedObject instance whose property initiated the model update.
+			 * @param property Name of the property for which the bound model property should have been been updated.
+			 * @param type Data type used in the binding.
+			 * @param newValue New value (external representation) as parsed and validated by the binding.
+			 * @param oldValue Old value (external representation) as previously stored in the ManagedObject.
+			 * @param message Localized message describing the validation issues
+			 */
+			validationError?: (element: sap.ui.base.ManagedObject, property: string, type: sap.ui.model.Type, newValue: any, oldValue: any, message: string) => void;
+			/**
+			 * Fired when a new value for a bound property should have been propagated to the model,
+			 * but parsing the value failed with an exception.
+			 * @param element ManagedObject instance whose property initiated the model update.
+			 * @param property Name of the property for which the bound model property should have been been updated.
+			 * @param type Data type used in the binding.
+			 * @param newValue New value (external representation) as parsed by the binding.
+			 * @param oldValue Old value (external representation) as previously stored in the ManagedObject.
+			 * @param message Localized message describing the parse error
+			 */
+			parseError?: (element: sap.ui.base.ManagedObject, property: string, type: sap.ui.model.Type, newValue: any, oldValue: any, message: string) => void;
+			/**
+			 * Fired when a new value for a bound property should have been propagated from the model,
+			 * but formatting the value failed with an exception.
+			 * @param element ManagedObject instance whose property should have received the model update.
+			 * @param property Name of the property for which the binding should have been updated.
+			 * @param type Data type used in the binding (if any).
+			 * @param newValue New value (model representation) as propagated from the model.
+			 * @param oldValue Old value (external representation) as previously stored in the ManagedObject.
+			 */
+			formatError?: (element: sap.ui.base.ManagedObject, property: string, type: sap.ui.model.Type, newValue: any, oldValue: any) => void;
+			/**
+			 * Fired when models or contexts are changed on this object (either by calling setModel/setBindingContext or due to propagation)
+			 */
+			modelContextChange?: () => void;
+		}
 	}
 
 	/**
@@ -4301,6 +4354,22 @@ declare namespace sap.ui {
 				 * @default false
 				 */
 				displayBlock?: boolean;
+				/**
+				 * Fired when the View has parsed the UI description and instantiated the contained controls (/control tree).
+				 */
+				afterInit?: () => void;
+				/**
+				 * Fired when the view has received the request to destroy itself, but before it has destroyed anything.
+				 */
+				beforeExit?: () => void;
+				/**
+				 * Fired when the View has been (re-)rendered and its HTML is present in the DOM.
+				 */
+				afterRendering?: () => void;
+				/**
+				 * Fired before this View is re-rendered. Use to unbind event handlers from HTML elements etc.
+				 */
+				beforeRendering?: () => void;
 			}
 		}
 	
@@ -5869,14 +5938,14 @@ declare namespace sap.ui {
 				content?: string;
 			}
 		
-			interface ExportColumnMetadata {
+			interface ExportColumnMetadata extends sap.ui.base.ManagedObjectMetadata {
 				/**
 				 * Column name.
 				 */
 				name?: string;
 			}
 		
-			interface ExportTypeMetadata {
+			interface ExportTypeMetadata extends sap.ui.base.ManagedObjectMetadata {
 				/**
 				 * File extension.
 				 */
@@ -5901,7 +5970,7 @@ declare namespace sap.ui {
 				separatorChar?: string;
 			}
 		
-			interface MockServerMetadata {
+			interface MockServerMetadata extends sap.ui.base.ManagedObjectMetadata {
 				/**
 				 * Getter for property <code>rootUri</code>.
 				 * 
@@ -12010,6 +12079,56 @@ declare namespace sap.ui {
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
 			 */
+			extend(sClassName: string, oClassInfo?: any|PopupMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
+			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
 			 * Fires event <code>closed</code> to attached listeners.
@@ -14969,7 +15088,7 @@ declare namespace sap.ui {
 				tag?: string;
 			}
 		
-			interface TemplateMetadata {
+			interface TemplateMetadata extends sap.ui.base.ManagedObjectMetadata {
 				/**
 				 * The Template definition as a String.
 				 */
@@ -14981,6 +15100,14 @@ declare namespace sap.ui {
 				 * The context is a data object. It can be used for default template expressions. A change of the context object leads to a re-rendering whereas a change of a nested property of the context object doesn't. By default the context is an empty object.
 				 */
 				context?: any;
+				/**
+				 * Fired when the Template Control has been (re-)rendered and its HTML is present in the DOM.
+				 */
+				afterRendering?: () => void;
+				/**
+				 * Fired before this Template Control is re-rendered. Use to unbind event handlers from HTML elements etc.
+				 */
+				beforeRendering?: () => void;
 			}
 		}
 	
@@ -15899,6 +16026,12 @@ declare namespace sap.ui {
 			 * @default []
 			 */
 			fieldGroupIds?: string[];
+			/**
+			 * Event is fired if a logical field group defined by <code>fieldGroupIds</code> of a control was left or the user explicitly pressed a validation key combination.
+			 * Use this event to validate data of the controls belonging to a field group.
+			 * @param fieldGroupIds field group IDs of the logical field groups to validate
+			 */
+			validateFieldGroup?: (fieldGroupIds: string[]) => void;
 		}
 	
 		interface CustomDataMetadata {
@@ -15925,7 +16058,7 @@ declare namespace sap.ui {
 			writeToDom?: boolean;
 		}
 	
-		interface FragmentMetadata {
+		interface FragmentMetadata extends sap.ui.base.ManagedObjectMetadata {
 			type?: string;
 		}
 	
@@ -15982,6 +16115,15 @@ declare namespace sap.ui {
 			 * @default true
 			 */
 			visible?: boolean;
+			/**
+			 * Fired after the HTML control has been rendered. Allows to manipulate the resulting DOM.
+			 * 
+			 * When the control doesn't have string content and no preserved DOM existed for this control,
+			 * then this event will fire, but there won't be a DOM node for this control.
+			 * @param isPreservedDOM Whether the current DOM of the control has been preserved (true) or not (e.g.
+			 * rendered from content property or it is an empty HTML control).
+			 */
+			afterRendering?: (isPreservedDOM: boolean) => void;
 		}
 	
 		interface IconMetadata extends sap.ui.core.ControlMetadata {
@@ -16045,6 +16187,10 @@ declare namespace sap.ui {
 			 * @default false
 			 */
 			noTabStop?: boolean;
+			/**
+			 * This event is fired when icon is pressed/activated by the user. When a handler is attached to this event, the Icon gets tab stop. If you want to disable this behavior, set the noTabStop property to true.
+			 */
+			press?: () => void;
 		}
 	
 		interface InvisibleTextMetadata extends sap.ui.core.ControlMetadata {
@@ -16114,6 +16260,17 @@ declare namespace sap.ui {
 			readOnly?: boolean;
 		}
 	
+		interface PopupMetadata extends sap.ui.base.ManagedObjectMetadata {
+			/**
+			 * 
+			 */
+			opened?: () => void;
+			/**
+			 * 
+			 */
+			closed?: () => void;
+		}
+	
 		interface ScrollBarMetadata extends sap.ui.core.ControlMetadata {
 			/**
 			 * Orientation. Defines if the Scrollbar is vertical or horizontal.
@@ -16136,6 +16293,14 @@ declare namespace sap.ui {
 			 * Number of steps to scroll. Used if the size of the content is not known as the data is loaded dynamically.
 			 */
 			steps?: number;
+			/**
+			 * Scroll event.
+			 * @param action Actions are: Click on track, button, drag of thumb, or mouse wheel click.
+			 * @param forward Direction of scrolling: back (up) or forward (down).
+			 * @param newScrollPos Current Scroll position either in pixels or in steps.
+			 * @param oldScrollPos Old Scroll position - can be in pixels or in steps.
+			 */
+			scroll?: (action: sap.ui.core.ScrollBarAction, forward: boolean, newScrollPos: number, oldScrollPos: number) => void;
 		}
 	
 		interface TitleMetadata {
@@ -16209,6 +16374,10 @@ declare namespace sap.ui {
 			 * @default 100
 			 */
 			closeDelay?: number;
+			/**
+			 * This event is fired when the Tooltip has been closed
+			 */
+			closed?: () => void;
 		}
 		/**
 		 * Applies the support for custom style classes on the prototype of a <code>sap.ui.core.Element</code>.
@@ -28155,6 +28324,11 @@ declare namespace sap.ui {
 			 * @default 90%
 			 */
 			width?: sap.ui.core.CSSSize;
+			/**
+			 * Fired when the user decides to apply his/her changes to the sample code
+			 * @param code the current code that will be applied
+			 */
+			apply?: (code: string) => void;
 		}
 	
 		interface CodeViewerMetadata extends sap.ui.core.ControlMetadata {
@@ -28185,6 +28359,14 @@ declare namespace sap.ui {
 			 * @default true
 			 */
 			visible?: boolean;
+			/**
+			 * Called when the mouse button is clicked over the non-editable(!) control
+			 */
+			press?: () => void;
+			/**
+			 * Called when the editor is active and should be saved
+			 */
+			save?: () => void;
 		}
 	
 		interface FileUploadIntrospectorMetadata extends sap.ui.core.ControlMetadata {
@@ -28230,6 +28412,10 @@ declare namespace sap.ui {
 			 * The position of the contained image. If not set the image is rendered with a fixed relative position.
 			 */
 			imagePosition?: string;
+			/**
+			 * Fired when the user clicks the hex button
+			 */
+			press?: () => void;
 		}
 	
 		interface HexagonButtonGroupMetadata extends sap.ui.core.ControlMetadata {
@@ -28281,6 +28467,11 @@ declare namespace sap.ui {
 			 * @default 10
 			 */
 			minFontSize?: number;
+			/**
+			 * Fired when a Tag is clicked.
+			 * @param tagId Id of the selected Tag.
+			 */
+			press?: (tagId: string) => void;
 		}
 	
 		interface UI5EntityCueCardMetadata extends sap.ui.core.ControlMetadata {
@@ -28307,6 +28498,15 @@ declare namespace sap.ui {
 			 * Style of the cue card.
 			 */
 			style?: any;
+			/**
+			 * Fired when a link for a type is activated (clicked) by the user.
+			 * 
+			 * When property "navigable" is set to true, type links are created for the types of properties, aggregations and associations, for the types of event or method parameters and for the return types of methods (if not void).
+			 * 
+			 * The default behavior for this event is to set the entityName property to the clicked entityName. Applications can prevent the default by calling the corresponding method on the event object.
+			 * @param entityName Name of the entity (control or type) that has been clicked.
+			 */
+			navigate?: (entityName: string) => void;
 		}
 	}
 
@@ -35202,6 +35402,11 @@ declare namespace sap.ui {
 			 * @default End
 			 */
 			sideContentPosition?: sap.ui.layout.SideContentPosition;
+			/**
+			 * Fires when the current breakpoint has been changed.
+			 * @param currentBreakpoint 
+			 */
+			breakpointChanged?: (currentBreakpoint: string) => void;
 		}
 	
 		interface FixFlexMetadata extends sap.ui.core.ControlMetadata {
@@ -35455,6 +35660,13 @@ declare namespace sap.ui {
 			 * @default 100%
 			 */
 			height?: sap.ui.core.CSSSize;
+			/**
+			 * Event is fired when contents are resized.
+			 * @param id The ID of the splitter control. The splitter control can also be accessed by calling getSource() on the event.
+			 * @param oldSizes An array of values representing the old (pixel-)sizes of the splitter contents
+			 * @param newSizes An array of values representing the new (pixel-)sizes of the splitter contents
+			 */
+			resize?: (id: string, oldSizes: number[], newSizes: number[]) => void;
 		}
 	
 		interface SplitterLayoutDataMetadata {
@@ -35973,6 +36185,10 @@ declare namespace sap.ui {
 			 * @default Gray
 			 */
 			color?: any;
+			/**
+			 * Event is fired when the user clicks the control.
+			 */
+			press?: () => void;
 		}
 	
 		interface VerticalProgressIndicatorMetadata extends sap.ui.core.ControlMetadata {
@@ -35980,6 +36196,10 @@ declare namespace sap.ui {
 			 * The numerical value between 0 and 100 which determines the height of the vertical bar. Values higher than 100 will be displayed as 100%, values lower than zero will be displayed as 0%.
 			 */
 			percentage?: number;
+			/**
+			 * Event is fired when the user clicks the control.
+			 */
+			press?: () => void;
 		}
 	}
 
@@ -40038,6 +40258,11 @@ declare namespace sap.ui {
 			 * @default false
 			 */
 			autoResizable?: boolean;
+			/**
+			 * Fires before the column menu is opened.
+			 * @param menu Refence to the selected <code>menu</code> instance to be opened.
+			 */
+			columnMenuOpen?: (menu: sap.ui.unified.Menu) => void;
 		}
 	
 		interface TableMetadata extends sap.ui.core.ControlMetadata {
@@ -40193,9 +40418,101 @@ declare namespace sap.ui {
 			 * @default false
 			 */
 			enableBusyIndicator?: boolean;
+			/**
+			 * fired when the row selection of the table has been changed (the event parameters can be used to determine
+			 * selection changes - to find out the selected rows you should better use the table selection API)
+			 * @param rowIndex row index which has been clicked so that the selection has been changed (either selected or deselected)
+			 * @param rowContext binding context of the row which has been clicked so that selection has been changed
+			 * @param rowIndices array of row indices which selection has been changed (either selected or deselected)
+			 * @param selectAll indicator if "select all" function is used to select rows
+			 * @param userInteraction indicates that the event was fired due to an explicit user interaction like clicking the row header
+			 * or using the keyboard (SPACE or ENTER) to select a row or a range of rows.
+			 */
+			rowSelectionChange?: (rowIndex: number, rowContext: any, rowIndices: number[], selectAll: boolean, userInteraction: boolean) => void;
+			/**
+			 * fired when a column of the table has been selected
+			 * @param column reference to the selected column
+			 */
+			columnSelect?: (column: sap.ui.table.Column) => void;
+			/**
+			 * fired when a table column is resized.
+			 * @param column resized column.
+			 * @param width new width of the table column as CSS Size definition.
+			 */
+			columnResize?: (column: sap.ui.table.Column, width: sap.ui.core.CSSSize) => void;
+			/**
+			 * fired when a table column is moved.
+			 * @param column moved column.
+			 * @param newPos new position of the column.
+			 */
+			columnMove?: (column: sap.ui.table.Column, newPos: number) => void;
+			/**
+			 * fired when the table is sorted.
+			 * @param column sorted column.
+			 * @param sortOrder Sort Order
+			 * @param columnAdded If column was added to sorter this is true. If new sort is started this is set to false
+			 */
+			sort?: (column: sap.ui.table.Column, sortOrder: sap.ui.table.SortOrder, columnAdded: boolean) => void;
+			/**
+			 * fired when the table is filtered.
+			 * @param column filtered column.
+			 * @param value filter value.
+			 */
+			filter?: (column: sap.ui.table.Column, value: string) => void;
+			/**
+			 * fired when the table is grouped (experimental!).
+			 * @param column grouped column.
+			 */
+			group?: (column: sap.ui.table.Column) => void;
+			/**
+			 * fired when the visibility of a table column is changed.
+			 * @param column affected column.
+			 * @param visible new value of the visible property.
+			 */
+			columnVisibility?: (column: sap.ui.table.Column, visible: boolean) => void;
+			/**
+			 * fired when the user clicks a cell of the table (experimental!).
+			 * @param cellControl The control of the cell.
+			 * @param cellDomRef DOM reference of the clicked cell. Can be used to position the context menu.
+			 * @param rowIndex Row index of the selected cell.
+			 * @param columnIndex Column index of the selected cell. This is the index of visible columns and might differ from
+			 * the index maintained in the column aggregation.
+			 * @param columnId Column ID of the selected cell.
+			 * @param rowBindingContext Row binding context of the selected cell.
+			 */
+			cellClick?: (cellControl: sap.ui.core.Control, cellDomRef: any, rowIndex: number, columnIndex: number, columnId: string, rowBindingContext: sap.ui.model.Context) => void;
+			/**
+			 * fired when the user clicks a cell of the table.
+			 * @param cellControl The control of the cell.
+			 * @param cellDomRef DOM reference of the clicked cell. Can be used to position the context menu.
+			 * @param rowIndex Row index of the selected cell.
+			 * @param columnIndex Column index of the selected cell. This is the index of visible columns and might differ from
+			 * the index maintained in the column aggregation.
+			 * @param columnId Column ID of the selected cell.
+			 * @param rowBindingContext Row binding context of the selected cell.
+			 */
+			cellContextmenu?: (cellControl: sap.ui.core.Control, cellDomRef: any, rowIndex: number, columnIndex: number, columnId: string, rowBindingContext: sap.ui.model.Context) => void;
+			/**
+			 * fired when a column of the table should be freezed
+			 * @param column reference to the column to freeze
+			 */
+			columnFreeze?: (column: sap.ui.table.Column) => void;
+			/**
+			 * This event is triggered when the custom filter item of the column menu is pressed. The column on which the event was triggered is passed as parameter.
+			 */
+			customFilter?: () => void;
+			/**
+			 * This event gets fired when the first visible row is changed. It should only be used by composite controls.
+			 * The event even is fired when setFirstVisibleRow is called programmatically.
+			 */
+			firstVisibleRowChanged?: () => void;
+			/**
+			 * This event gets fired when the busy state of the table changes. It should only be used by composite controls.
+			 */
+			busyStateChanged?: () => void;
 		}
 	
-		interface TablePersoControllerMetadata {
+		interface TablePersoControllerMetadata extends sap.ui.base.ManagedObjectMetadata {
 			/**
 			 * Auto save state
 			 * @default true
@@ -40252,6 +40569,13 @@ declare namespace sap.ui {
 			 * @default 0
 			 */
 			rootLevel?: number;
+			/**
+			 * fired when a node has been expanded or collapsed (only available in hierachical mode)
+			 * @param rowIndex index of the expanded/collapsed row
+			 * @param rowContext binding context of the selected row
+			 * @param expanded flag whether the node has been expanded or collapsed
+			 */
+			toggleOpenState?: (rowIndex: number, rowContext: any, expanded: boolean) => void;
 		}
 	}
 
@@ -43045,6 +43369,26 @@ declare namespace sap.ui {
 				 * @default true
 				 */
 				enabledNext?: boolean;
+				/**
+				 * Previous button pressed
+				 */
+				pressPrevious?: () => void;
+				/**
+				 * Next button pressed
+				 */
+				pressNext?: () => void;
+				/**
+				 * First button pressed (normally day)
+				 */
+				pressButton0?: () => void;
+				/**
+				 * Second button pressed (normally month)
+				 */
+				pressButton1?: () => void;
+				/**
+				 * Third button pressed (normally year)
+				 */
+				pressButton2?: () => void;
 			}
 		
 			interface MonthMetadata extends sap.ui.core.ControlMetadata {
@@ -43093,6 +43437,17 @@ declare namespace sap.ui {
 				 * Width of Month
 				 */
 				width?: sap.ui.core.CSSSize;
+				/**
+				 * Date selection changed
+				 */
+				select?: () => void;
+				/**
+				 * Date focus changed
+				 * @param date focused date
+				 * @param otherMonth focused date is in an other month that the displayed one
+				 * @param restoreOldDate focused date is set to the same as before (date in other month clicked)
+				 */
+				focus?: (date: any, otherMonth: boolean, restoreOldDate: boolean) => void;
 			}
 		
 			interface MonthPickerMetadata extends sap.ui.core.ControlMetadata {
@@ -43119,6 +43474,15 @@ declare namespace sap.ui {
 				 * If not set, the calendar type of the global configuration is used.
 				 */
 				primaryCalendarType?: sap.ui.core.CalendarType;
+				/**
+				 * Month selection changed
+				 */
+				select?: () => void;
+				/**
+				 * If less than 12 months are displayed the <code>pageChange</code> event is fired
+				 * if the displayed months are changed by user navigation.
+				 */
+				pageChange?: () => void;
 			}
 		
 			interface MonthsRowMetadata extends sap.ui.core.ControlMetadata {
@@ -43155,6 +43519,16 @@ declare namespace sap.ui {
 				 * @default false
 				 */
 				showHeader?: boolean;
+				/**
+				 * Month selection changed
+				 */
+				select?: () => void;
+				/**
+				 * Month focus changed
+				 * @param date First date, as JavaScript Date object, of the month that is focused.
+				 * @param notVisible If set, the focused date is not rendered yet. (This happens by navigating out of the visible area.)
+				 */
+				focus?: (date: any, notVisible: boolean) => void;
 			}
 		
 			interface TimesRowMetadata extends sap.ui.core.ControlMetadata {
@@ -43202,6 +43576,16 @@ declare namespace sap.ui {
 				 * @default false
 				 */
 				showHeader?: boolean;
+				/**
+				 * Time selection changed
+				 */
+				select?: () => void;
+				/**
+				 * Time focus changed
+				 * @param date date, as JavaScript Date object, of the focused time.
+				 * @param notVisible If set, the focused date is not rendered yet. (This happens by navigating out of the visible area.)
+				 */
+				focus?: (date: any, notVisible: boolean) => void;
 			}
 		
 			interface YearPickerMetadata extends sap.ui.core.ControlMetadata {
@@ -43226,6 +43610,14 @@ declare namespace sap.ui {
 				 * If not set, the calendar type of the global configuration is used.
 				 */
 				primaryCalendarType?: sap.ui.core.CalendarType;
+				/**
+				 * Month selection changed
+				 */
+				select?: () => void;
+				/**
+				 * The <code>pageChange</code> event is fired if the displayed years are changed by user navigation.
+				 */
+				pageChange?: () => void;
 			}
 		}
 	
@@ -50314,7 +50706,7 @@ declare namespace sap.ui {
 			 * @param sId id for the new control, generated automatically if no id is given(optional)
 			 * @param mSettings initial settings for the new control(optional)
 			 */
-			constructor(sId?: string, mSettings?: any);
+			constructor(sId?: string, mSettings?: sap.ui.unified.ShellOverlayMetadata);
 			/**
 			 * Constructor for a new ShellOverlay.
 			 * 
@@ -50384,6 +50776,56 @@ declare namespace sap.ui {
 			 * @param oClassInfo Object literal with information about the class(optional)
 			 * @param FNMetaImpl Constructor function for the metadata object; if not given, it defaults to <code>sap.ui.core.ElementMetadata</code>(optional)
 			 * @return Created class / constructor function
+			 */
+			extend(sClassName: string, oClassInfo?: any|ShellOverlayMetadata, FNMetaImpl?: any): any;
+			/**
+			 * Creates a subclass of class sap.ui.base.Object with name <code>sClassName</code>
+			 * and enriches it with the information contained in <code>oClassInfo</code>.
+			 * 
+			 * <code>oClassInfo</code> might contain three kinds of informations:
+			 * <ul>
+			 * <li><code>metadata:</code> an (optional) object literal with metadata about the class.
+			 * The information in the object literal will be wrapped by an instance of {@link sap.ui.base.Metadata Metadata}
+			 * and might contain the following information
+			 * <ul>
+			 * <li><code>interfaces:</code> {string[]} (optional) set of names of implemented interfaces (defaults to no interfaces)</li>
+			 * <li><code>publicMethods:</code> {string[]} (optional) list of methods that should be part of the public
+			 * facade of the class</li>
+			 * <li><code>abstract:</code> {boolean} (optional) flag that marks the class as abstract (purely informational, defaults to false)</li>
+			 * <li><code>final:</code> {boolean} (optional) flag that marks the class as final (defaults to false)</li>
+			 * </ul>
+			 * Subclasses of sap.ui.base.Object can enrich the set of supported metadata (e.g. see {@link sap.ui.core.Element.extend}).
+			 * </li>
+			 * 
+			 * <li><code>constructor:</code> a function that serves as a constructor function for the new class.
+			 * If no constructor function is given, the framework creates a default implementation that delegates all
+			 * its arguments to the constructor function of the base class.
+			 * </li>
+			 * 
+			 * <li><i>any-other-name:</i> any other property in the <code>oClassInfo</code> is copied into the prototype
+			 * object of the newly created class. Callers can thereby add methods or properties to all instances of the
+			 * class. But be aware that the given values are shared between all instances of the class. Usually, it doesn't
+			 * make sense to use primitive values here other than to declare public constants.
+			 * </li>
+			 * 
+			 * </ul>
+			 * 
+			 * The prototype object of the newly created class uses the same prototype as instances of the base class
+			 * (prototype chaining).
+			 * 
+			 * A metadata object is always created, even if there is no <code>metadata</code> entry in the <code>oClassInfo</code>
+			 * object. A getter for the metadata is always attached to the prototype and to the class (constructor function)
+			 * itself.
+			 * 
+			 * Last but not least, with the third argument <code>FNMetaImpl</code> the constructor of a metadata class
+			 * can be specified. Instances of that class will be used to represent metadata for the newly created class
+			 * and for any subclass created from it. Typically, only frameworks will use this parameter to enrich the
+			 * metadata for a new class hierarchy they introduce (e.g. {@link sap.ui.core.Element.extend Element}).
+			 * @note Overload from base type sap.ui.base.Object
+			 * @param sClassName name of the class to be created
+			 * @param oClassInfo structured object with informations about the class(optional)
+			 * @param FNMetaImpl constructor function for the metadata object. If not given, it defaults to sap.ui.base.Metadata.(optional)
+			 * @return the created class / constructor function
 			 */
 			extend(sClassName: string, oClassInfo?: any, FNMetaImpl?: any): any;
 			/**
@@ -50806,6 +51248,20 @@ declare namespace sap.ui {
 			 * the <code>minDate</code> is set to the begin of the month of the <code>maxDate</code>.
 			 */
 			maxDate?: any;
+			/**
+			 * Date selection changed
+			 */
+			select?: () => void;
+			/**
+			 * Date selection was cancelled
+			 */
+			cancel?: () => void;
+			/**
+			 * <code>startDate</code> was changed while navigation in <code>Calendar</code>
+			 * 
+			 * Use <code>getStartDate</code> function to determine the current start date
+			 */
+			startDateChange?: () => void;
 		}
 	
 		interface CalendarAppointmentMetadata extends sap.ui.unified.DateTypeRangeMetadata {
@@ -50932,6 +51388,18 @@ declare namespace sap.ui {
 			 * the <code>minDate</code> is set to the begin of the month of the <code>maxDate</code>.
 			 */
 			maxDate?: any;
+			/**
+			 * Month selection changed
+			 */
+			select?: () => void;
+			/**
+			 * Month selection was cancelled
+			 */
+			cancel?: () => void;
+			/**
+			 * <code>startDate</code> was changed while navigation in <code>CalendarMonthInterval</code>
+			 */
+			startDateChange?: () => void;
 		}
 	
 		interface CalendarRowMetadata extends sap.ui.core.ControlMetadata {
@@ -51033,6 +51501,31 @@ declare namespace sap.ui {
 			 * @default Standard
 			 */
 			appointmentsVisualization?: sap.ui.unified.CalendarAppointmentVisualization;
+			/**
+			 * Fired if an appointment was selected
+			 * @param appointment selected appointment
+			 * @param appointments selected appointments in case a group appointment is selected
+			 * @param multiSelect If set, the appointment was selected by multiple selection (e.g. shift + mouse click).
+			 * So more than the current appointment could be selected.
+			 */
+			select?: (appointment: sap.ui.unified.CalendarAppointment, appointments: sap.ui.unified.CalendarAppointment[], multiSelect: boolean) => void;
+			/**
+			 * <code>startDate</code> was changed while navigating in <code>CalendarRow</code>
+			 */
+			startDateChange?: () => void;
+			/**
+			 * The <code>CalendarRow</code> should be left while navigating. (Arrow up or arrow down.)
+			 * The caller should determine the next control to be focused
+			 * @param type The type of the event that triggers this <code>leaveRow</code>
+			 */
+			leaveRow?: (type: string) => void;
+			/**
+			 * Fired if an interval was selected
+			 * @param startDate Interval start date as JavaScript date object
+			 * @param endDate Interval end date as JavaScript date object
+			 * @param subInterval If set, the selected interval is a subinterval
+			 */
+			intervalSelect?: (startDate: any, endDate: any, subInterval: boolean) => void;
 		}
 	
 		interface CalendarTimeIntervalMetadata extends sap.ui.core.ControlMetadata {
@@ -51095,6 +51588,18 @@ declare namespace sap.ui {
 			 * the <code>minDate</code> is set to the begin of the month of the <code>maxDate</code>.
 			 */
 			maxDate?: any;
+			/**
+			 * Time selection changed
+			 */
+			select?: () => void;
+			/**
+			 * Time selection was cancelled
+			 */
+			cancel?: () => void;
+			/**
+			 * <code>startDate</code> was changed while navigation in <code>CalendarTimeInterval</code>
+			 */
+			startDateChange?: () => void;
 		}
 	
 		interface ContentSwitcherMetadata extends sap.ui.core.ControlMetadata {
@@ -51276,6 +51781,78 @@ declare namespace sap.ui {
 			 * @default false
 			 */
 			iconOnly?: boolean;
+			/**
+			 * Event is fired when the value of the file path has been changed.
+			 * @param newValue New file path value.
+			 * @param files Files.
+			 */
+			change?: (newValue: string, files: any[]) => void;
+			/**
+			 * Event is fired as soon as the upload request is completed (either successful or unsuccessful). To see if the upload request was successful, check the 'state' parameter for a value 2xx.
+			 * The uploads actual progress can be retrieved via the 'uploadProgress' Event.
+			 * However this covers only the client side of the Upload process and does not give any success status from the server.
+			 * @param fileName The name of a file to be uploaded.
+			 * @param response Response message which comes from the server. On the server side this response has to be put within the &quot;body&quot; tags of the response document of the iFrame.
+			 * It can consist of a return code and an optional message. This does not work in cross-domain scenarios.
+			 * @param readyStateXHR ReadyState of the XHR request. Required for receiving a readyState is to set the property "sendXHR" to "true". This property is not supported by Internet Explorer 9.
+			 * @param status Status of the XHR request. Required for receiving a status is to set the property "sendXHR" to "true". This property is not supported by Internet Explorer 9.
+			 * @param responseRaw Http-Response which comes from the server. Required for receiving "responseRaw" is to set the property "sendXHR" to true. This property is not supported by Internet Explorer 9.
+			 * @param headers Http-Response-Headers which come from the server. provided as a JSON-map, i.e. each header-field is reflected by a property in the header-object, with the property value reflecting the header-field's content.
+			 * Required for receiving "header" is to set the property "sendXHR" to true.
+			 * This property is not supported by Internet Explorer 9.
+			 * @param requestHeaders Http-Request-Headers. Required for receiving "header" is to set the property "sendXHR" to true. This property is not supported by Internet Explorer 9.
+			 */
+			uploadComplete?: (fileName: string, response: string, readyStateXHR: string, status: string, responseRaw: string, headers: any, requestHeaders: any[]) => void;
+			/**
+			 * Event is fired when the type of a file does not match the mimeType or fileType property.
+			 * @param fileName The name of a file to be uploaded.
+			 * @param fileType The file ending of a file to be uploaded.
+			 * @param mimeType The MIME type of a file to be uploaded.
+			 */
+			typeMissmatch?: (fileName: string, fileType: string, mimeType: string) => void;
+			/**
+			 * Event is fired when the size of a file is above the maximumFileSize property.
+			 * This event is not supported by Internet Explorer 9 (same restriction as for the property maximumFileSize).
+			 * @param fileName The name of a file to be uploaded.
+			 * @param fileSize The size in MB of a file to be uploaded.
+			 */
+			fileSizeExceed?: (fileName: string, fileSize: string) => void;
+			/**
+			 * Event is fired when the file is allowed for upload on client side.
+			 */
+			fileAllowed?: () => void;
+			/**
+			 * Event is fired after the upload has started and before the upload is completed and contains progress information related to the running upload.
+			 * Depending on file size, band width and used browser the event is fired once or multiple times.
+			 * This is event is only supported with property sendXHR set to true, i.e. the event is not supported in Internet Explorer 9.
+			 * @param lengthComputable Indicates whether or not the relative upload progress can be calculated out of loaded and total.
+			 * @param loaded The number of bytes of the file which have been uploaded by to the time the event was fired.
+			 * @param total The total size of the file to be uploaded in byte.
+			 * @param fileName The name of a file to be uploaded.
+			 * @param requestHeaders Http-Request-Headers. Required for receiving "header" is to set the property "sendXHR" to true.
+			 * This property is not supported by Internet Explorer 9.
+			 */
+			uploadProgress?: (lengthComputable: boolean, loaded: number, total: number, fileName: string, requestHeaders: any[]) => void;
+			/**
+			 * Event is fired after the current upload has been aborted.
+			 * This is event is only supported with property sendXHR set to true, i.e. the event is not supported in Internet Explorer 9.
+			 * @param fileName The name of a file to be uploaded.
+			 * @param requestHeaders Http-Request-Headers. Required for receiving "header" is to set the property "sendXHR" to true.
+			 * This property is not supported by Internet Explorer 9.
+			 */
+			uploadAborted?: (fileName: string, requestHeaders: any[]) => void;
+			/**
+			 * Event is fired, if the filename of a chosen file is longer than the value specified with the maximumFilenameLength property.
+			 * @param fileName The filename, which is longer than specified by the value of the property maximumFilenameLength.
+			 */
+			filenameLengthExceed?: (fileName: string) => void;
+			/**
+			 * Event is fired before an upload is started.
+			 * @param fileName The name of a file to be uploaded.
+			 * @param requestHeaders Http-Request-Headers. Required for receiving "header" is to set the property "sendXHR" to true.
+			 * This property is not supported by Internet Explorer 9.
+			 */
+			uploadStart?: (fileName: string, requestHeaders: any[]) => void;
 		}
 	
 		interface FileUploaderParameterMetadata {
@@ -51311,6 +51888,12 @@ declare namespace sap.ui {
 			 * @default 5
 			 */
 			pageSize?: number;
+			/**
+			 * Fired on the root menu of a menu hierarchy whenever a user selects an item within the menu or within one of its direct or indirect submenus.
+			 * <b>Note:</b> There is also a select event available for each single menu item. This event and the event of the menu items are redundant.
+			 * @param item The action (item) which was selected by the user.
+			 */
+			itemSelect?: (item: sap.ui.unified.MenuItemBase) => void;
 		}
 	
 		interface MenuItemMetadata extends sap.ui.unified.MenuItemBaseMetadata {
@@ -51344,6 +51927,13 @@ declare namespace sap.ui {
 			 * @default false
 			 */
 			startsSection?: boolean;
+			/**
+			 * Fired when the item is selected by the user.
+			 * <b>Note:</b> The event is also available for items which have a submenu.
+			 * In general, applications must not handle event in this case because the user selection opens the sub menu.
+			 * @param item The current item
+			 */
+			select?: (item: sap.ui.unified.MenuItemBase) => void;
 		}
 	
 		interface MenuTextFieldItemMetadata extends sap.ui.unified.MenuItemBaseMetadata {
@@ -51405,6 +51995,10 @@ declare namespace sap.ui {
 			 * @default true
 			 */
 			visible?: boolean;
+			/**
+			 * Event is fired when the user presses the item.
+			 */
+			press?: () => void;
 		}
 	
 		interface ShellHeadUserItemMetadata {
@@ -51423,6 +52017,10 @@ declare namespace sap.ui {
 			 * An image of the user, normally an URI to a image but also an icon from the sap.ui.core.IconPool is possible.
 			 */
 			image?: sap.ui.core.URI;
+			/**
+			 * Event is fired when the user presses the button.
+			 */
+			press?: () => void;
 		}
 	
 		interface ShellLayoutMetadata extends sap.ui.core.ControlMetadata {
@@ -51441,6 +52039,13 @@ declare namespace sap.ui {
 			 * @default true
 			 */
 			headerVisible?: boolean;
+		}
+	
+		interface ShellOverlayMetadata extends sap.ui.core.ControlMetadata {
+			/**
+			 * Fired when the overlay was closed.
+			 */
+			closed?: () => void;
 		}
 	
 		interface SplitContainerMetadata extends sap.ui.core.ControlMetadata {
@@ -52138,7 +52743,7 @@ declare namespace sap.ui {
 				extend(sClassName: string, oClassInfo?: any|ActionMetadata, FNMetaImpl?: any): any;
 			}
 		
-			interface ActionMetadata {
+			interface ActionMetadata extends sap.ui.base.ManagedObjectMetadata {
 				idSuffix?: string;
 			}
 		
