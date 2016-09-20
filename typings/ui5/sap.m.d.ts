@@ -1,4 +1,4 @@
-
+import sapimport = sap;
 
 /**
  * The main UI5 control library, with responsive controls that can be used in touch devices as well as desktop browsers.

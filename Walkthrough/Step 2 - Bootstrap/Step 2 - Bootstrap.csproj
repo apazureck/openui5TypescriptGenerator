@@ -51,7 +51,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Index.html" />
-    <Content Include="resources\sap-ui-core-all-dbg.js" />
     <Content Include="Web.config" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

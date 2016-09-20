@@ -32,7 +32,11 @@ namespace UI5TypeScriptGeneratorJsonGUI
 
             string[] stubs;
 
+            string optionalarray = parameters.Select(x => x.optional).Aggregate("", (a, b) => a + (b ? "o" : "x"));
+
             int lastmandatory = parameters.IndexOf(parameters.LastOrDefault(x => !x.optional));
+
+            int firstoptional = parameters.IndexOf(parameters.FirstOrDefault(x => x.optional));
 
             if (lastmandatory > -1)
                 parameters.Take(lastmandatory).ToList().ForEach(x => x.optional = false);

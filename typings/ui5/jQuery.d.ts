@@ -1,4 +1,3 @@
-import sapui = sap.ui;
 /**
  * Provides base functionality of the SAP jQuery plugin as extension of the jQuery framework.<br/>
  * See also <a href="http://api.jquery.com/jQuery/">jQuery</a> for details.<br/>
@@ -1121,7 +1120,7 @@ declare namespace jQuery {
 		 * loading "preload" files that do not define an own module / module value.
 		 * 
 		 * Functionality might be removed/renamed in future, so no code outside the
-		 * sapui.core library must use it.
+		 * sap.ui.core library must use it.
 		 */
 		// Resticted function _loadJSResourceAsync();
 		/**
@@ -1246,9 +1245,9 @@ declare namespace jQuery {
 		 *                           or in case of an object {modName: "...", type: "..."}
 		 *                           where modName is the name of the module and the type
 		 *                           could be a specific dot separated extension e.g.
-		 *                           <code>{modName: "sapui.core.Dev", type: "view"}</code>
+		 *                           <code>{modName: "sap.ui.core.Dev", type: "view"}</code>
 		 *                           loads <code>sap/ui/core/Dev.view.js</code> and
-		 *                           registers as <code>sapui.core.Dev.view</code>
+		 *                           registers as <code>sap.ui.core.Dev.view</code>
 		 * @param bCreateNamespace whether to create the parent namespace(optional)
 		 */
 		function declare(sModuleName: string|any, bCreateNamespace?: boolean);
@@ -1534,7 +1533,7 @@ declare namespace jQuery {
 		 * </ul>
 		 * 
 		 * UI5 APIs that only deal with Javascript resources, use a slight variation of this scheme,
-		 * where the extension '.js' is always omitted (see {@link sapui.define}, {@link sapui.require}).
+		 * where the extension '.js' is always omitted (see {@link sap.ui.define}, {@link sap.ui.require}).
 		 * 
 		 * 
 		 * <b>Relationship to old Module Name Syntax</b>
@@ -1846,9 +1845,9 @@ declare namespace jQuery {
 		 *                              or in case of an object {modName: "...", type: "..."}
 		 *                              where modName is the name of the module and the type
 		 *                              could be a specific dot separated extension e.g.
-		 *                              <code>{modName: "sapui.core.Dev", type: "view"}</code>
+		 *                              <code>{modName: "sap.ui.core.Dev", type: "view"}</code>
 		 *                              loads <code>sap/ui/core/Dev.view.js</code> and
-		 *                              registers as <code>sapui.core.Dev.view</code>
+		 *                              registers as <code>sap.ui.core.Dev.view</code>
 		 */
 		function require(vModuleName: string|any);
 		/**
@@ -2036,7 +2035,7 @@ declare namespace jQuery {
 		 * @param vDestination target jQuery object or a control.
 		 * @return Target element
 		 */
-		function syncStyleClass(sStyleClass: string, vSource: any|sapui.core.Control|string, vDestination: any|sapui.core.Control): any;
+		function syncStyleClass(sStyleClass: string, vSource: any|sap.ui.core.Control|string, vDestination: any|sap.ui.core.Control): any;
 		/**
 		 * Creates and returns a pseudo-unique id.
 		 * 
@@ -2229,7 +2228,7 @@ declare namespace jQuery {
 	 * @param idx optional parameter to return the control instance at the given idx's position in the array.(optional)
 	 * @return depending on the given context and idx parameter an array of controls, an instance or null.
 	 */
-	function control(idx?: number): sapui.core.Control[]|sapui.core.Control;
+	function control(idx?: number): sap.ui.core.Control[]|sap.ui.core.Control;
 	/**
 	 * Sets or gets the position of the cursor in an element that supports cursor positioning
 	 * @param iPos The cursor position to set (or no parameter to retrieve the cursor position)
